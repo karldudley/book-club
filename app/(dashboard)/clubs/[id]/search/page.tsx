@@ -43,12 +43,12 @@ export default function SearchPage({ params }: { params: Promise<{ id: string }>
         .eq('club_id', id)
         .eq('picked_by', user.id)
         .eq('status', 'suggested')
-        .single()
+        .single() as { data: any }
 
       if (existingSuggestion) {
         // Update existing suggestion
-        const { error: updateError } = await supabase
-          .from('club_books')
+        const { error: updateError } = await (supabase
+          .from('club_books') as any)
           .update({
             google_books_id: selectedBook.id,
             title: selectedBook.volumeInfo.title,
@@ -60,8 +60,8 @@ export default function SearchPage({ params }: { params: Promise<{ id: string }>
         if (updateError) throw updateError
       } else {
         // Add new suggestion
-        const { error: insertError } = await supabase
-          .from('club_books')
+        const { error: insertError } = await (supabase
+          .from('club_books') as any)
           .insert({
             club_id: id,
             google_books_id: selectedBook.id,

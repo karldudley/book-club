@@ -35,7 +35,7 @@ export default function CreateClubForm() {
           .from('clubs')
           .select('id')
           .eq('invite_code', inviteCode)
-          .single()
+          .single() as { data: any }
 
         if (!data) {
           isUnique = true
@@ -45,8 +45,8 @@ export default function CreateClubForm() {
       }
 
       // Create club
-      const { data: club, error: clubError } = await supabase
-        .from('clubs')
+      const { data: club, error: clubError } = await (supabase
+        .from('clubs') as any)
         .insert({
           name,
           description,
@@ -60,8 +60,8 @@ export default function CreateClubForm() {
       if (clubError || !club) throw clubError || new Error('Failed to create club')
 
       // Add admin as first member
-      const { error: memberError } = await supabase
-        .from('club_members')
+      const { error: memberError } = await (supabase
+        .from('club_members') as any)
         .insert({
           club_id: club.id,
           user_id: user.id,

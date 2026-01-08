@@ -20,8 +20,8 @@ export default function BookActions({ bookId, bookStatus, isAdmin, clubId }: Boo
   const handleDelete = async () => {
     setLoading(true)
     try {
-      const { error } = await supabase
-        .from('club_books')
+      const { error } = await (supabase
+        .from('club_books') as any)
         .delete()
         .eq('id', bookId)
 
@@ -38,8 +38,8 @@ export default function BookActions({ bookId, bookStatus, isAdmin, clubId }: Boo
   const handleMarkCompleted = async () => {
     setLoading(true)
     try {
-      const { error } = await supabase
-        .from('club_books')
+      const { error } = await (supabase
+        .from('club_books') as any)
         .update({ status: 'completed' })
         .eq('id', bookId)
 

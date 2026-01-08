@@ -37,8 +37,8 @@ export default function ActivateBookButton({ bookId, clubId, scheduleWeeks, hasA
     try {
       const deadline = calculateDeadline(startDate)
 
-      const { error } = await supabase
-        .from('club_books')
+      const { error } = await (supabase
+        .from('club_books') as any)
         .update({
           status: 'active',
           start_date: startDate,

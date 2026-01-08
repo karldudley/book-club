@@ -28,7 +28,7 @@ export default function JoinClubForm() {
         .from('clubs')
         .select('id')
         .eq('invite_code', inviteCode.toUpperCase())
-        .single()
+        .single() as { data: any, error: any }
 
       if (clubError || !club) {
         throw new Error('Invalid invite code')
@@ -40,15 +40,15 @@ export default function JoinClubForm() {
         .select('id')
         .eq('club_id', club.id)
         .eq('user_id', user.id)
-        .single()
+        .single() as { data: any }
 
       if (existingMember) {
         throw new Error('You are already a member of this club')
       }
 
       // Add user as member
-      const { error: memberError } = await supabase
-        .from('club_members')
+      const { error: memberError } = await (supabase
+        .from('club_members') as any)
         .insert({
           club_id: club.id,
           user_id: user.id,

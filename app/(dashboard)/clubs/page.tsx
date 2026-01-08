@@ -24,7 +24,7 @@ export default async function ClubsPage() {
         admin_id
       )
     `)
-    .eq('user_id', user.id)
+    .eq('user_id', user.id) as { data: any[] }
 
   const clubs = memberships?.map((m: any) => m.clubs).filter(Boolean) || []
 
