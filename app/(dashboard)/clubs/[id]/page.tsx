@@ -21,7 +21,7 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
     .from('clubs')
     .select('*')
     .eq('id', id)
-    .single()
+    .single() as { data: any }
 
   if (!club) {
     notFound()
