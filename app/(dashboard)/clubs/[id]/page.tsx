@@ -54,7 +54,7 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
       )
     `)
     .eq('club_id', id)
-    .order('created_at', { ascending: false })
+    .order('created_at', { ascending: false }) as { data: any[] }
 
   const isAdmin = club.admin_id === user.id
 
