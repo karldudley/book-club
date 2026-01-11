@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import BookActions from '@/components/clubs/BookActions'
 import ActivateBookButton from '@/components/clubs/ActivateBookButton'
+import RatingButton from '@/components/books/RatingButton'
 
 export default async function ClubPage({ params }: { params: { id: string } }) {
   const supabase = await createClient()
@@ -56,12 +57,34 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
     .eq('club_id', id)
     .order('created_at', { ascending: false }) as { data: any[] }
 
+  // Get all ratings for books in this club
+  const { data: ratings } = await supabase
+    .from('book_ratings')
+    .select('*')
+    .in('book_id', books?.map((b: any) => b.id) || []) as { data: any[] }
+
+  // Calculate rating statistics for each book
+  const bookRatings = books?.map((book: any) => {
+    const bookRatingsList = ratings?.filter((r: any) => r.book_id === book.id) || []
+    const userRating = bookRatingsList.find((r: any) => r.user_id === user.id)
+    const avgRating = bookRatingsList.length > 0
+      ? bookRatingsList.reduce((sum: number, r: any) => sum + r.rating, 0) / bookRatingsList.length
+      : undefined
+
+    return {
+      ...book,
+      currentUserRating: userRating?.rating,
+      averageRating: avgRating,
+      totalRatings: bookRatingsList.length
+    }
+  })
+
   const isAdmin = club.admin_id === user.id
 
   // Separate books by status
-  const activeBooks = books?.filter((b: any) => b.status === 'active') || []
-  const completedBooks = books?.filter((b: any) => b.status === 'completed') || []
-  const suggestedBooks = books?.filter((b: any) => b.status === 'suggested') || []
+  const activeBooks = bookRatings?.filter((b: any) => b.status === 'active') || []
+  const completedBooks = bookRatings?.filter((b: any) => b.status === 'completed') || []
+  const suggestedBooks = bookRatings?.filter((b: any) => b.status === 'suggested') || []
   const userSuggestion = suggestedBooks.find((b: any) => b.picked_by === user.id)
 
   return (
@@ -204,6 +227,14 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                             Due: {new Date(book.deadline).toLocaleDateString()}
                           </p>
                         )}
+                        <div className="mt-3">
+                          <RatingButton
+                            bookId={book.id}
+                            currentUserRating={book.currentUserRating}
+                            averageRating={book.averageRating}
+                            totalRatings={book.totalRatings}
+                          />
+                        </div>
                         <BookActions
                           bookId={book.id}
                           bookStatus={book.status}
@@ -292,6 +323,14 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                         <p className="text-xs text-gray-500 mt-1">
                           Suggested by: {book.profiles?.display_name || book.profiles?.email || 'Unknown'}
                         </p>
+                        <div className="mt-2">
+                          <RatingButton
+                            bookId={book.id}
+                            currentUserRating={book.currentUserRating}
+                            averageRating={book.averageRating}
+                            totalRatings={book.totalRatings}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
