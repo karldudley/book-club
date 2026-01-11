@@ -116,37 +116,6 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
 
       {/* Books Section */}
       <div className="space-y-6 mb-6">
-        {/* User's Suggestion */}
-        {userSuggestion && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Your Suggestion</h2>
-            <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
-              <div className="flex gap-4">
-                {userSuggestion.cover_url && (
-                  <img
-                    src={userSuggestion.cover_url}
-                    alt={userSuggestion.title}
-                    className="w-16 h-24 object-cover rounded"
-                  />
-                )}
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900">{userSuggestion.title}</h3>
-                  {userSuggestion.author && (
-                    <p className="text-sm text-gray-600">{userSuggestion.author}</p>
-                  )}
-                  <p className="text-xs text-blue-600 mt-2">Waiting for admin to activate</p>
-                </div>
-              </div>
-              <Link
-                href={`/clubs/${id}/search`}
-                className="mt-3 block text-center text-sm text-blue-600 hover:text-blue-700"
-              >
-                Change suggestion
-              </Link>
-            </div>
-          </div>
-        )}
-
         {/* Active Books */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex justify-between items-center mb-4">
@@ -225,6 +194,37 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
             </div>
           )}
         </div>
+
+        {/* User's Suggestion */}
+        {userSuggestion && (
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Your Suggestion</h2>
+            <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+              <div className="flex gap-4">
+                {userSuggestion.cover_url && (
+                  <img
+                    src={userSuggestion.cover_url}
+                    alt={userSuggestion.title}
+                    className="w-16 h-24 object-cover rounded"
+                  />
+                )}
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900">{userSuggestion.title}</h3>
+                  {userSuggestion.author && (
+                    <p className="text-sm text-gray-600">{userSuggestion.author}</p>
+                  )}
+                  <p className="text-xs text-blue-600 mt-2">Waiting for admin to activate</p>
+                </div>
+              </div>
+              <Link
+                href={`/clubs/${id}/search`}
+                className="mt-3 block text-center text-sm text-blue-600 hover:text-blue-700"
+              >
+                Change suggestion
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Admin: Pending Suggestions */}
         {isAdmin && suggestedBooks.length > 0 && (
