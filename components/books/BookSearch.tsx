@@ -98,6 +98,19 @@ export default function BookSearch({ onSelectBook }: BookSearchProps) {
                     {book.volumeInfo.authors.join(', ')}
                   </p>
                 )}
+                {book.volumeInfo.averageRating && book.volumeInfo.ratingsCount && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center">
+                      <span className="text-yellow-500 text-sm">★</span>
+                      <span className="text-sm font-medium text-gray-700 ml-1">
+                        {book.volumeInfo.averageRating.toFixed(1)}
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-500">
+                      ({book.volumeInfo.ratingsCount.toLocaleString()} ratings)
+                    </span>
+                  </div>
+                )}
                 {book.volumeInfo.description && (
                   <p className="text-sm text-gray-500 line-clamp-2">
                     {book.volumeInfo.description}
