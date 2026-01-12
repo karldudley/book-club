@@ -76,56 +76,43 @@ export default function BookSearch({ onSelectBook }: BookSearchProps) {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {results.map((book) => (
-          <div
-            key={book.id}
-            className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition"
-          >
-            <div className="flex gap-4 mb-3">
-              {book.volumeInfo.imageLinks?.thumbnail && (
+        {results
+          .filter((book) => book.volumeInfo.imageLinks?.thumbnail)
+          .map((book) => (
+            <div
+              key={book.id}
+              className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition"
+            >
+              <div className="flex gap-4 mb-3">
                 <img
-                  src={book.volumeInfo.imageLinks.thumbnail}
+                  src={book.volumeInfo.imageLinks?.thumbnail}
                   alt={book.volumeInfo.title}
                   className="w-20 h-28 object-cover rounded"
                 />
-              )}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-900 mb-1 truncate">
-                  {book.volumeInfo.title}
-                </h3>
-                {book.volumeInfo.authors && (
-                  <p className="text-sm text-gray-600 mb-2">
-                    {book.volumeInfo.authors.join(', ')}
-                  </p>
-                )}
-                {book.volumeInfo.averageRating && book.volumeInfo.ratingsCount && (
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex items-center">
-                      <span className="text-yellow-500 text-sm">★</span>
-                      <span className="text-sm font-medium text-gray-700 ml-1">
-                        {book.volumeInfo.averageRating.toFixed(1)}
-                      </span>
-                    </div>
-                    <span className="text-xs text-gray-500">
-                      ({book.volumeInfo.ratingsCount.toLocaleString()} ratings)
-                    </span>
-                  </div>
-                )}
-                {book.volumeInfo.description && (
-                  <p className="text-sm text-gray-500 line-clamp-2">
-                    {book.volumeInfo.description}
-                  </p>
-                )}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 mb-1 truncate">
+                    {book.volumeInfo.title}
+                  </h3>
+                  {book.volumeInfo.authors && (
+                    <p className="text-sm text-gray-600 mb-2">
+                      {book.volumeInfo.authors.join(', ')}
+                    </p>
+                  )}
+                  {book.volumeInfo.description && (
+                    <p className="text-sm text-gray-500 line-clamp-2">
+                      {book.volumeInfo.description}
+                    </p>
+                  )}
+                </div>
               </div>
+              <button
+                onClick={() => onSelectBook(book)}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm font-semibold transition cursor-pointer"
+              >
+                Select this book
+              </button>
             </div>
-            <button
-              onClick={() => onSelectBook(book)}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm font-semibold transition cursor-pointer"
-            >
-              Select this book
-            </button>
-          </div>
-        ))}
+          ))}
       </div>
     </div>
   )
