@@ -34,7 +34,7 @@ export default async function ClubsPage() {
         <h1 className="text-3xl font-bold text-gray-900">My Book Clubs</h1>
         <Link
           href="/clubs/new"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition cursor-pointer"
         >
           Create Club
         </Link>
@@ -51,13 +51,13 @@ export default async function ClubsPage() {
           <div className="flex justify-center space-x-4">
             <Link
               href="/clubs/new"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition cursor-pointer"
             >
               Create Club
             </Link>
             <Link
               href="/join"
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold transition"
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold transition cursor-pointer"
             >
               Join Club
             </Link>
@@ -69,7 +69,7 @@ export default async function ClubsPage() {
             <Link
               key={club.id}
               href={`/clubs/${club.id}`}
-              className="bg-white rounded-lg shadow-sm hover:shadow-md transition p-6 border border-gray-200"
+              className="bg-white rounded-lg shadow-sm hover:shadow-md transition p-6 border border-gray-200 cursor-pointer"
             >
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 {club.name}

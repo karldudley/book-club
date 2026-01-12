@@ -92,7 +92,7 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
       <div className="mb-6">
         <Link
           href="/clubs"
-          className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+          className="text-blue-600 hover:text-blue-700 text-sm font-medium cursor-pointer"
         >
           ← Back to clubs
         </Link>
@@ -125,7 +125,7 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
             {!userSuggestion && (
               <Link
                 href={`/clubs/${id}/search`}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition cursor-pointer"
               >
                 Suggest Book
               </Link>
@@ -137,7 +137,7 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
               <p className="text-gray-500 mb-4">No active books yet</p>
               <Link
                 href={`/clubs/${id}/search`}
-                className="text-blue-600 hover:text-blue-700 font-medium"
+                className="text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
               >
                 Suggest your first book
               </Link>
@@ -218,7 +218,7 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
               </div>
               <Link
                 href={`/clubs/${id}/search`}
-                className="mt-3 block text-center text-sm text-blue-600 hover:text-blue-700"
+                className="mt-3 block text-center text-sm text-blue-600 hover:text-blue-700 cursor-pointer"
               >
                 Change suggestion
               </Link>

@@ -61,7 +61,7 @@ export default function BookActions({ bookId, bookStatus, isAdmin, clubId }: Boo
           <button
             onClick={handleMarkCompleted}
             disabled={loading}
-            className="text-xs text-green-600 hover:text-green-700 font-medium disabled:opacity-50"
+            className="text-xs text-green-600 hover:text-green-700 font-medium disabled:opacity-50 cursor-pointer"
           >
             Mark as Completed
           </button>
@@ -69,7 +69,7 @@ export default function BookActions({ bookId, bookStatus, isAdmin, clubId }: Boo
         <button
           onClick={() => setShowDeleteModal(true)}
           disabled={loading}
-          className="text-xs text-red-600 hover:text-red-700 font-medium disabled:opacity-50"
+          className="text-xs text-red-600 hover:text-red-700 font-medium disabled:opacity-50 cursor-pointer"
         >
           Delete
         </button>
@@ -87,14 +87,14 @@ export default function BookActions({ bookId, bookStatus, isAdmin, clubId }: Boo
               <button
                 onClick={() => setShowDeleteModal(false)}
                 disabled={loading}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={loading}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-50"
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-50 cursor-pointer"
               >
                 {loading ? 'Deleting...' : 'Delete'}
               </button>

@@ -46,7 +46,7 @@ export default function BookSearch({ onSelectBook }: BookSearchProps) {
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition disabled:opacity-50"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition disabled:opacity-50 cursor-pointer"
           >
             {loading ? 'Searching...' : 'Search'}
           </button>
@@ -89,7 +89,7 @@ export default function BookSearch({ onSelectBook }: BookSearchProps) {
             </div>
             <button
               onClick={() => onSelectBook(book)}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm font-semibold transition"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm font-semibold transition cursor-pointer"
             >
               Select this book
             </button>
