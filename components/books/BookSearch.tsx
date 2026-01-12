@@ -12,6 +12,7 @@ export default function BookSearch({ onSelectBook }: BookSearchProps) {
   const [results, setResults] = useState<GoogleBook[]>([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -19,13 +20,23 @@ export default function BookSearch({ onSelectBook }: BookSearchProps) {
 
     setLoading(true)
     setSearched(true)
+    setError(null)
 
     try {
       const response = await fetch(`/api/books/search?q=${encodeURIComponent(query)}`)
       const data = await response.json()
-      setResults(data.items || [])
+
+      if (!response.ok) {
+        // Display user-friendly error message from API
+        setError(data.message || 'Unable to search for books. Please try again.')
+        setResults([])
+      } else {
+        setResults(data.items || [])
+        setError(null)
+      }
     } catch (error) {
       console.error('Search failed:', error)
+      setError('Unable to connect to the search service. Please check your connection and try again.')
       setResults([])
     } finally {
       setLoading(false)
@@ -53,7 +64,14 @@ export default function BookSearch({ onSelectBook }: BookSearchProps) {
         </div>
       </form>
 
-      {searched && results.length === 0 && !loading && (
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+          <p className="font-medium">Search Error</p>
+          <p className="text-sm">{error}</p>
+        </div>
+      )}
+
+      {searched && results.length === 0 && !loading && !error && (
         <p className="text-center text-gray-500 py-8">No books found. Try a different search term.</p>
       )}
 
