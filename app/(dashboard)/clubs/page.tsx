@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import { BookCover, Stamp, SketchDivider } from '@/components/ui/dogear'
 
 export default async function ClubsPage() {
   const supabase = await createClient()
@@ -30,38 +31,38 @@ export default async function ClubsPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">My Book Clubs</h1>
-        <Link
-          href="/clubs/new"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition cursor-pointer"
-        >
-          Create Club
-        </Link>
+      {/* Header strip */}
+      <div style={{ marginBottom: 40 }}>
+        <p className="eyebrow" style={{ marginBottom: 10 }}>Your reading groups</p>
+        <div className="flex justify-between items-end gap-4 flex-wrap" style={{ marginBottom: 12 }}>
+          <h1 className="h-display" style={{ fontSize: 48 }}>My Book Clubs</h1>
+          <div className="flex gap-3">
+            <Link href="/clubs/new" className="btn btn-primary">Start a Club</Link>
+            <Link href="/join" className="btn btn-paper">Join with Code</Link>
+          </div>
+        </div>
+        <SketchDivider />
       </div>
 
       {clubs.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            No clubs yet
-          </h2>
-          <p className="text-gray-600 mb-6">
-            Create your first book club or join an existing one with an invite code
-          </p>
-          <div className="flex justify-center space-x-4">
-            <Link
-              href="/clubs/new"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition cursor-pointer"
-            >
-              Create Club
-            </Link>
-            <Link
-              href="/join"
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold transition cursor-pointer"
-            >
-              Join Club
-            </Link>
-          </div>
+        /* Empty state */
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, maxWidth: 720 }}>
+          <Link href="/clubs/new" className="card lift block" style={{ padding: 32, textDecoration: 'none', color: 'inherit', position: 'relative' }}>
+            <p className="label-mono" style={{ marginBottom: 8 }}>01 — Start a club</p>
+            <h3 className="h-section" style={{ fontSize: 22, margin: '0 0 10px' }}>Open a new shelf</h3>
+            <p style={{ fontSize: 13.5, color: 'var(--ink-2)', marginBottom: 20, lineHeight: 1.5 }}>
+              You set the cadence, invite friends with a code, and pick the first book.
+            </p>
+            <span className="btn btn-primary btn-sm">Create Club →</span>
+          </Link>
+          <Link href="/join" className="card lift block" style={{ padding: 32, textDecoration: 'none', color: 'inherit', background: 'var(--paper-2)' }}>
+            <p className="label-mono" style={{ marginBottom: 8 }}>02 — Got an invite?</p>
+            <h3 className="h-section" style={{ fontSize: 22, margin: '0 0 10px' }}>Punch in the code</h3>
+            <p style={{ fontSize: 13.5, color: 'var(--ink-2)', marginBottom: 20, lineHeight: 1.5 }}>
+              Six characters, all caps. Your friend should've sent it your way already.
+            </p>
+            <span className="btn btn-paper btn-sm">Join with Code →</span>
+          </Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -69,19 +70,38 @@ export default async function ClubsPage() {
             <Link
               key={club.id}
               href={`/clubs/${club.id}`}
-              className="bg-white rounded-lg shadow-sm hover:shadow-md transition p-6 border border-gray-200 cursor-pointer"
+              className="card lift block"
+              style={{ padding: 22, textDecoration: 'none', color: 'inherit', position: 'relative', minHeight: 180 }}
             >
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                {club.name}
-              </h3>
-              {club.description && (
-                <p className="text-gray-600 text-sm mb-4">{club.description}</p>
-              )}
+              {/* Admin tape decoration */}
               {club.admin_id === user.id && (
-                <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                  Admin
-                </span>
+                <div style={{ position: 'absolute', top: -10, right: 20, transform: 'rotate(6deg)', zIndex: 1 }}>
+                  <div
+                    className="tape"
+                    style={{ padding: '2px 16px', fontFamily: 'var(--font-jetbrains-mono)', fontSize: 8, fontWeight: 700, color: 'var(--ink)', letterSpacing: '0.18em', textTransform: 'uppercase', lineHeight: '20px' }}
+                  >
+                    ADMIN
+                  </div>
+                </div>
               )}
+
+              <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                <BookCover title={club.name} size="sm" />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h3 className="h-section" style={{ fontSize: 20, margin: 0 }}>{club.name}</h3>
+                  {club.description && (
+                    <p style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 6, lineHeight: 1.5 }}>
+                      {club.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ marginTop: 'auto', paddingTop: 16 }}>
+                {club.admin_id === user.id && (
+                  <Stamp variant="brown" rotate={-2}>Admin</Stamp>
+                )}
+              </div>
             </Link>
           ))}
         </div>

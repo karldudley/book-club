@@ -56,47 +56,60 @@ export default function BookActions({ bookId, bookStatus, isAdmin, clubId }: Boo
 
   return (
     <>
-      <div className="flex gap-2 mt-3">
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
         {bookStatus === 'active' && (
           <button
             onClick={handleMarkCompleted}
             disabled={loading}
-            className="text-xs text-green-600 hover:text-green-700 font-medium disabled:opacity-50 cursor-pointer"
+            className="btn btn-paper btn-sm"
           >
-            Mark as Completed
+            Mark Complete
           </button>
         )}
         <button
           onClick={() => setShowDeleteModal(true)}
           disabled={loading}
-          className="text-xs text-red-600 hover:text-red-700 font-medium disabled:opacity-50 cursor-pointer"
+          className="btn btn-ghost btn-sm"
+          style={{ color: 'var(--stamp-red)' }}
         >
           Delete
         </button>
       </div>
 
-      {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Book?</h3>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to delete this book? This action cannot be undone.
+        <div
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(47,42,36,0.75)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 50, padding: 16,
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowDeleteModal(false) }}
+        >
+          <div className="card" style={{ padding: 28, maxWidth: 360, width: '100%', background: 'var(--paper)' }}>
+            <h3 className="h-section" style={{ fontSize: 22, margin: '0 0 10px' }}>Delete Book?</h3>
+            <p style={{ fontSize: 14, color: 'var(--ink-2)', marginBottom: 24, lineHeight: 1.5 }}>
+              Are you sure you want to remove this book? This action cannot be undone.
             </p>
-            <div className="flex gap-3 justify-end">
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setShowDeleteModal(false)}
                 disabled={loading}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
+                className="btn btn-ghost btn-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={loading}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-50 cursor-pointer"
+                className="btn btn-sm"
+                style={{
+                  background: 'var(--stamp-red)',
+                  color: 'var(--paper)',
+                  borderColor: 'var(--stamp-red)',
+                }}
               >
-                {loading ? 'Deleting...' : 'Delete'}
+                {loading ? 'Deleting…' : 'Delete'}
               </button>
             </div>
           </div>

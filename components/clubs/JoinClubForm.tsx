@@ -1,18 +1,46 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 export default function JoinClubForm() {
-  const [inviteCode, setInviteCode] = useState('')
+  const [cells, setCells] = useState<string[]>(['', '', '', '', '', ''])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
   const router = useRouter()
   const supabase = createClient()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const inviteCode = cells.join('').toUpperCase()
+
+  const handleCellChange = (idx: number, value: string) => {
+    const char = value.replace(/[^a-zA-Z0-9]/g, '').slice(-1).toUpperCase()
+    const next = [...cells]
+    next[idx] = char
+    setCells(next)
+    if (char && idx < 5) {
+      inputRefs.current[idx + 1]?.focus()
+    }
+  }
+
+  const handleKeyDown = (idx: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !cells[idx] && idx > 0) {
+      inputRefs.current[idx - 1]?.focus()
+    }
+  }
+
+  const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault()
+    const text = e.clipboardData.getData('text').replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6)
+    const next = ['', '', '', '', '', '']
+    for (let i = 0; i < text.length; i++) next[i] = text[i]
+    setCells(next)
+    inputRefs.current[Math.min(text.length, 5)]?.focus()
+  }
+
+  const handleSubmit = async () => {
+    if (inviteCode.length !== 6) return
     setError(null)
     setLoading(true)
 
@@ -23,18 +51,16 @@ export default function JoinClubForm() {
 
       if (!user) throw new Error('Not authenticated')
 
-      // Find club with invite code
       const { data: club, error: clubError } = await supabase
         .from('clubs')
         .select('id')
-        .eq('invite_code', inviteCode.toUpperCase())
-        .single() as { data: any, error: any }
+        .eq('invite_code', inviteCode)
+        .single() as { data: any; error: any }
 
       if (clubError || !club) {
         throw new Error('Invalid invite code')
       }
 
-      // Check if already a member
       const { data: existingMember } = await supabase
         .from('club_members')
         .select('id')
@@ -46,7 +72,6 @@ export default function JoinClubForm() {
         throw new Error('You are already a member of this club')
       }
 
-      // Add user as member
       const { error: memberError } = await (supabase
         .from('club_members') as any)
         .insert({
@@ -64,40 +89,105 @@ export default function JoinClubForm() {
     }
   }
 
+  const cellStyle = (isFocused: boolean, hasValue: boolean): React.CSSProperties => ({
+    width: '100%',
+    aspectRatio: '3/4',
+    textAlign: 'center',
+    fontSize: 32,
+    fontFamily: 'var(--font-jetbrains-mono)',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    border: '1.5px solid var(--ink)',
+    borderRadius: 8,
+    background: hasValue ? 'var(--paper-2)' : 'var(--paper)',
+    color: 'var(--ink)',
+    outline: 'none',
+    boxShadow: isFocused ? '3px 3px 0 var(--terracotta)' : 'none',
+    transform: isFocused ? 'translate(-1px, -1px)' : 'none',
+    transition: 'box-shadow 80ms, transform 80ms',
+    caretColor: 'var(--terracotta)',
+  })
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <label htmlFor="inviteCode" className="block text-sm font-medium text-gray-700 mb-1">
-          Invite Code
-        </label>
-        <input
-          id="inviteCode"
-          type="text"
-          value={inviteCode}
-          onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-          required
-          maxLength={6}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-2xl font-mono font-bold tracking-wider uppercase"
-          placeholder="ABC123"
-        />
-        <p className="text-sm text-gray-500 mt-2">
-          Enter the 6-character code shared by the club admin
-        </p>
+    <div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10 }}>
+        {cells.map((c, i) => (
+          <input
+            key={i}
+            ref={(el) => { inputRefs.current[i] = el }}
+            type="text"
+            value={c}
+            maxLength={1}
+            autoCapitalize="characters"
+            onChange={(e) => handleCellChange(i, e.target.value)}
+            onKeyDown={(e) => handleKeyDown(i, e)}
+            onPaste={i === 0 ? handlePaste : undefined}
+            onFocus={(e) => {
+              e.currentTarget.style.boxShadow = '3px 3px 0 var(--terracotta)'
+              e.currentTarget.style.transform = 'translate(-1px, -1px)'
+              e.currentTarget.style.background = 'var(--paper-2)'
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.boxShadow = 'none'
+              e.currentTarget.style.transform = 'none'
+              e.currentTarget.style.background = c ? 'var(--paper-2)' : 'var(--paper)'
+            }}
+            style={cellStyle(false, !!c)}
+          />
+        ))}
       </div>
 
+      <p className="eyebrow" style={{ marginTop: 14, textAlign: 'center' }}>
+        6 characters, all caps — check your messages
+      </p>
+
       {error && (
-        <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
+        <div
+          style={{
+            marginTop: 16,
+            borderLeft: '3px solid var(--stamp-red)',
+            background: 'var(--paper-2)',
+            color: 'var(--stamp-red)',
+            padding: '10px 14px',
+            borderRadius: '0 6px 6px 0',
+            fontFamily: 'var(--font-jetbrains-mono)',
+            fontSize: 11,
+            letterSpacing: '0.04em',
+          }}
+        >
           {error}
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={loading || inviteCode.length !== 6}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {loading ? 'Joining...' : 'Join Club'}
-      </button>
-    </form>
+      {inviteCode.length === 6 && (
+        <div
+          className="card kraft-bg"
+          style={{ marginTop: 20, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}
+        >
+          <div>
+            <p className="label-mono" style={{ marginBottom: 4 }}>Code ready</p>
+            <span
+              style={{
+                fontFamily: 'var(--font-jetbrains-mono)',
+                fontSize: 28,
+                fontWeight: 700,
+                letterSpacing: '0.22em',
+                color: 'var(--ink)',
+              }}
+            >
+              {inviteCode}
+            </span>
+          </div>
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="btn btn-primary"
+            style={{ height: 48 }}
+          >
+            {loading ? 'Joining…' : 'Join Club →'}
+          </button>
+        </div>
+      )}
+    </div>
   )
 }

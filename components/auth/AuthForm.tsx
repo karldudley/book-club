@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { DogearLogo, SketchDivider } from '@/components/ui/dogear'
 
 type AuthFormProps = {
   mode: 'login' | 'signup'
@@ -55,88 +56,137 @@ export default function AuthForm({ mode }: AuthFormProps) {
   }
 
   return (
-    <div className="bg-white p-8 rounded-lg shadow-lg">
-      <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
-        {mode === 'login' ? 'Welcome Back' : 'Create Account'}
-      </h1>
+    <div className="card" style={{ overflow: 'hidden' }}>
+      {/* Main form area */}
+      <div style={{ padding: '36px 40px 28px' }}>
+        <DogearLogo />
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {mode === 'signup' && (
+        <div style={{ marginTop: 28 }}>
+          <p className="eyebrow" style={{ marginBottom: 10 }}>
+            {mode === 'login' ? '— Welcome back, friend' : '— A book club for slow readers'}
+          </p>
+          <h1
+            className="h-display"
+            style={{ fontSize: 36, margin: 0 }}
+          >
+            {mode === 'login' ? (
+              <>Pick up <span className="sketch-underline">where you</span> left off.</>
+            ) : (
+              <>Make a <span className="sketch-underline">shelf</span> of your own.</>
+            )}
+          </h1>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ marginTop: 28, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {mode === 'signup' && (
+            <div>
+              <label htmlFor="displayName" className="field-label">
+                Your Name
+              </label>
+              <input
+                id="displayName"
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                required
+                className="field"
+                placeholder="Jane Doe"
+              />
+            </div>
+          )}
+
           <div>
-            <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-1">
-              Display Name
+            <label htmlFor="email" className="field-label">
+              Email
             </label>
             <input
-              id="displayName"
-              type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="John Doe"
+              className="field"
+              placeholder="you@example.com"
             />
           </div>
-        )}
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="you@example.com"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="••••••••"
-          />
-        </div>
-
-        {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
-            {error}
+          <div>
+            <label htmlFor="password" className="field-label">
+              {mode === 'login' ? 'Password' : 'Password (6+)'}
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              className="field"
+              placeholder="••••••••"
+            />
           </div>
-        )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? 'Loading...' : mode === 'login' ? 'Sign In' : 'Sign Up'}
-        </button>
-      </form>
+          {error && (
+            <div
+              style={{
+                borderLeft: '3px solid var(--stamp-red)',
+                background: 'var(--paper-2)',
+                color: 'var(--stamp-red)',
+                padding: '10px 14px',
+                borderRadius: '0 6px 6px 0',
+                fontFamily: 'var(--font-jetbrains-mono)',
+                fontSize: 11,
+                letterSpacing: '0.04em',
+              }}
+            >
+              {error}
+            </div>
+          )}
 
-      <div className="mt-4 text-center text-sm text-gray-600">
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn btn-primary"
+            style={{ marginTop: 4, height: 48, width: '100%', fontSize: 15 }}
+          >
+            {loading
+              ? 'Loading…'
+              : mode === 'login'
+              ? 'Sign in'
+              : 'Make my shelf'}
+          </button>
+        </form>
+      </div>
+
+      {/* Footer */}
+      <div
+        style={{
+          padding: '18px 40px 24px',
+          borderTop: '1px dashed var(--ink-3)',
+          background: 'var(--paper-2)',
+          fontSize: 13,
+          color: 'var(--ink-2)',
+          textAlign: 'center',
+        }}
+      >
         {mode === 'login' ? (
           <>
-            Don't have an account?{' '}
-            <a href="/signup" className="text-blue-600 hover:underline font-medium">
-              Sign up
+            New to Dogear?{' '}
+            <a
+              href="/signup"
+              style={{ color: 'var(--brown)', fontWeight: 600, textDecoration: 'underline' }}
+            >
+              Start a shelf →
             </a>
           </>
         ) : (
           <>
-            Already have an account?{' '}
-            <a href="/login" className="text-blue-600 hover:underline font-medium">
-              Sign in
+            Already have one?{' '}
+            <a
+              href="/login"
+              style={{ color: 'var(--brown)', fontWeight: 600, textDecoration: 'underline' }}
+            >
+              Sign in →
             </a>
           </>
         )}

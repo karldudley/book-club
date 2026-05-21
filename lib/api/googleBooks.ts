@@ -66,7 +66,7 @@ export async function searchBooks(query: string): Promise<GoogleBooksResponse> {
   const response = await fetch(url)
 
   if (!response.ok) {
-    throw new Error('Failed to search books')
+    throw new Error(`API error ${response.status}`)
   }
 
   const data: GoogleBooksResponse = await response.json()

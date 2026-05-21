@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//private/tmp/**)",
+      "Bash(mkdir design_extract)",
+      "Bash(tar -xf design_file.html -C design_extract)"
+    ]
+  }
+}

@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { StarRating } from '@/components/ui/dogear'
 
 interface RatingButtonProps {
   bookId: string
@@ -15,7 +16,7 @@ export default function RatingButton({
   bookId,
   currentUserRating,
   averageRating,
-  totalRatings
+  totalRatings,
 }: RatingButtonProps) {
   const [showModal, setShowModal] = useState(false)
   const [selectedRating, setSelectedRating] = useState(currentUserRating || 0)
@@ -29,20 +30,22 @@ export default function RatingButton({
 
     setLoading(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
-      // Upsert rating (insert or update if exists)
       const { error } = await (supabase
         .from('book_ratings') as any)
-        .upsert({
-          book_id: bookId,
-          user_id: user.id,
-          rating: selectedRating,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'book_id,user_id'
-        })
+        .upsert(
+          {
+            book_id: bookId,
+            user_id: user.id,
+            rating: selectedRating,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'book_id,user_id' }
+        )
 
       if (error) throw error
 
@@ -55,68 +58,108 @@ export default function RatingButton({
     }
   }
 
+  const activeRating = hoverRating || selectedRating
+
   return (
     <>
-      <button
-        onClick={() => {
-          setSelectedRating(currentUserRating || 0)
-          setShowModal(true)
-        }}
-        className="text-sm font-medium text-blue-600 hover:text-blue-700 cursor-pointer"
-      >
-        {currentUserRating ? `Your rating: ${currentUserRating}/10` : 'Rate this book'}
+      <div>
+        <button
+          onClick={() => {
+            setSelectedRating(currentUserRating || 0)
+            setShowModal(true)
+          }}
+          className="btn btn-paper btn-sm"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
+        >
+          {currentUserRating ? (
+            <>
+              <StarRating rating={currentUserRating} size={12} />
+              <span>{currentUserRating}/10</span>
+            </>
+          ) : (
+            'Rate this book'
+          )}
+        </button>
         {averageRating && totalRatings ? (
-          <span className="ml-2 text-gray-500">
-            (avg: {averageRating.toFixed(1)}/10 from {totalRatings} {totalRatings === 1 ? 'rating' : 'ratings'})
-          </span>
+          <p className="eyebrow" style={{ marginTop: 5 }}>
+            Avg {averageRating.toFixed(1)}/10 · {totalRatings} {totalRatings === 1 ? 'rating' : 'ratings'}
+          </p>
         ) : null}
-      </button>
+      </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Rate this book</h3>
-
-            <div className="mb-6">
-              <p className="text-sm text-gray-600 mb-3">Select a rating from 1-10:</p>
-              <div className="flex gap-2 justify-center flex-wrap">
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
-                  <button
-                    key={rating}
-                    onClick={() => setSelectedRating(rating)}
-                    onMouseEnter={() => setHoverRating(rating)}
-                    onMouseLeave={() => setHoverRating(0)}
-                    className={`w-12 h-12 rounded-lg font-bold text-lg transition cursor-pointer ${
-                      rating <= (hoverRating || selectedRating)
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    {rating}
-                  </button>
-                ))}
-              </div>
-              {selectedRating > 0 && (
-                <p className="text-center mt-3 text-sm font-medium text-gray-700">
-                  Selected: {selectedRating}/10
-                </p>
-              )}
+        <div
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(47,42,36,0.75)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 50, padding: 16,
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false) }}
+        >
+          <div className="card" style={{ padding: 28, maxWidth: 380, width: '100%', background: 'var(--paper)', position: 'relative' }}>
+            <div style={{ position: 'absolute', top: 14, right: 14 }}>
+              <span className="stamp stamp-red" style={{ transform: 'rotate(-4deg)', fontSize: 9 }}>● Final verdict</span>
             </div>
 
-            <div className="flex gap-3 justify-end">
+            <p className="label-mono" style={{ marginBottom: 12 }}>Rate this book · 1 to 10</p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, marginBottom: 12 }}>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => {
+                const isActive = n <= activeRating
+                const isCurrent = n === selectedRating
+                return (
+                  <button
+                    key={n}
+                    onClick={() => setSelectedRating(n)}
+                    onMouseEnter={() => setHoverRating(n)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    style={{
+                      aspectRatio: '1',
+                      borderRadius: 6,
+                      border: '1.5px solid var(--ink)',
+                      background: isActive
+                        ? isCurrent
+                          ? 'var(--terracotta)'
+                          : 'var(--mustard)'
+                        : 'var(--paper-2)',
+                      color: 'var(--ink)',
+                      fontFamily: 'var(--font-roboto-slab)',
+                      fontWeight: 700,
+                      fontSize: 16,
+                      cursor: 'pointer',
+                      boxShadow: isCurrent ? '2px 2px 0 var(--ink)' : 'none',
+                      transform: isCurrent ? 'translate(-1px,-1px)' : 'none',
+                      transition: 'all 60ms ease',
+                    }}
+                  >
+                    {n}
+                  </button>
+                )
+              })}
+            </div>
+
+            {selectedRating > 0 && (
+              <p className="label-mono" style={{ textAlign: 'center', marginBottom: 16 }}>
+                Selected: {selectedRating}/10
+              </p>
+            )}
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setShowModal(false)}
                 disabled={loading}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
+                className="btn btn-ghost btn-sm"
               >
-                Cancel
+                Maybe later
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={loading || selectedRating < 1}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50 cursor-pointer"
+                className="btn btn-accent btn-sm"
+                style={{ fontFamily: 'var(--font-roboto-slab)', fontWeight: 700 }}
               >
-                {loading ? 'Saving...' : currentUserRating ? 'Update Rating' : 'Submit Rating'}
+                {loading ? 'Saving…' : `Stamp it · ${selectedRating}/10`}
               </button>
             </div>
           </div>

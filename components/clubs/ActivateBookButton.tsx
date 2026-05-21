@@ -20,8 +20,8 @@ export default function ActivateBookButton({ bookId, clubId, scheduleWeeks, hasA
 
   if (hasActiveBook) {
     return (
-      <p className="mt-2 text-sm text-gray-500 italic">
-        Complete the current active book before activating another
+      <p className="eyebrow" style={{ fontStyle: 'italic', color: 'var(--ink-3)' }}>
+        Complete current book first
       </p>
     )
   }
@@ -61,52 +61,61 @@ export default function ActivateBookButton({ bookId, clubId, scheduleWeeks, hasA
     <>
       <button
         onClick={() => setShowModal(true)}
-        className="mt-2 text-sm text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
+        className="btn btn-accent btn-sm"
       >
         Activate this book →
       </button>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Activate Book</h3>
+        <div
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(47,42,36,0.75)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 50, padding: 16,
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false) }}
+        >
+          <div className="card" style={{ padding: 28, maxWidth: 380, width: '100%', background: 'var(--paper)' }}>
+            <h3 className="h-section" style={{ fontSize: 22, margin: '0 0 20px' }}>Activate Book</h3>
 
-            <div className="mb-4">
-              <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">
-                Start Date
-              </label>
+            <div style={{ marginBottom: 16 }}>
+              <label htmlFor="startDate" className="field-label">Start Date</label>
               <input
                 id="startDate"
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="field"
               />
             </div>
 
-            <div className="mb-6">
-              <p className="text-sm text-gray-600">
-                <strong>Deadline:</strong> {new Date(calculateDeadline(startDate)).toLocaleDateString()}
+            <div style={{ marginBottom: 24 }}>
+              <p className="label-mono" style={{ marginBottom: 4 }}>Deadline</p>
+              <p style={{ fontFamily: 'var(--font-roboto-slab)', fontWeight: 700, fontSize: 18 }}>
+                {new Date(calculateDeadline(startDate)).toLocaleDateString('en-GB', {
+                  day: 'numeric', month: 'short', year: 'numeric',
+                })}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
-                ({scheduleWeeks} weeks from start date)
+              <p className="eyebrow" style={{ marginTop: 4 }}>
+                {scheduleWeeks} weeks from start date
               </p>
             </div>
 
-            <div className="flex gap-3 justify-end">
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setShowModal(false)}
                 disabled={loading}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
+                className="btn btn-ghost btn-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={handleActivate}
                 disabled={loading}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50 cursor-pointer"
+                className="btn btn-primary btn-sm"
               >
-                {loading ? 'Activating...' : 'Activate'}
+                {loading ? 'Activating…' : 'Activate'}
               </button>
             </div>
           </div>

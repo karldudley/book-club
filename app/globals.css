@@ -1,37 +1,332 @@
 @import "tailwindcss";
 
+/* ===== Dogear — Design Tokens ===== */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper:       #f6efe2;
+  --paper-2:     #ece2cf;
+  --paper-3:     #e2d6bd;
+  --ink:         #2f2a24;
+  --ink-2:       #5b5048;
+  --ink-3:       #8a8276;
+  --brown:       #7a3f1d;
+  --terracotta:  #c97b4a;
+  --forest:      #3d5a4a;
+  --stamp-red:   #a8341e;
+  --mustard:     #c89a3a;
+
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 14px;
 }
 
+/* Register as Tailwind 4 color utilities */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper:      var(--paper);
+  --color-paper-2:    var(--paper-2);
+  --color-paper-3:    var(--paper-3);
+  --color-ink:        var(--ink);
+  --color-ink-2:      var(--ink-2);
+  --color-ink-3:      var(--ink-3);
+  --color-brown:      var(--brown);
+  --color-terracotta: var(--terracotta);
+  --color-forest:     var(--forest);
+  --color-stamp-red:  var(--stamp-red);
+  --color-mustard:    var(--mustard);
+
+  --font-sans: var(--font-dm-sans), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --font-slab: var(--font-roboto-slab), Georgia, serif;
+  --font-hand: var(--font-caveat), cursive;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* ===== Base ===== */
+*, *::before, *::after { box-sizing: border-box; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-dm-sans), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-input,
-textarea,
-select {
-  color: #111827 !important;
+/* ===== Paper textures ===== */
+.paper-bg {
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(rgba(122, 63, 29, 0.045) 1px, transparent 1px),
+    radial-gradient(rgba(47, 42, 36, 0.03) 1px, transparent 1px);
+  background-size: 18px 18px, 7px 7px;
+  background-position: 0 0, 3px 3px;
 }
 
-input::placeholder,
-textarea::placeholder {
-  color: #9ca3af !important;
+.kraft-bg {
+  background-color: var(--paper-2);
+  background-image:
+    repeating-linear-gradient(45deg, rgba(122, 63, 29, 0.04) 0 1px, transparent 1px 6px),
+    repeating-linear-gradient(-45deg, rgba(122, 63, 29, 0.04) 0 1px, transparent 1px 9px);
+}
+
+/* ===== Cards ===== */
+.card {
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--r-lg);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.lift {
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.lift:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--ink);
+}
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-family: var(--font-dm-sans), sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: var(--r-md);
+  border: 1.5px solid var(--ink);
+  cursor: pointer;
+  transition: transform 80ms ease, box-shadow 80ms ease, background 80ms ease;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  line-height: 1;
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: 3px 3px 0 var(--brown);
+}
+.btn-primary:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--brown);
+}
+
+.btn-accent {
+  background: var(--terracotta);
+  color: var(--ink);
+  border-color: var(--terracotta);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.btn-accent:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.btn-paper {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.btn-paper:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ink);
+  background: var(--paper-2);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-2);
+  border-color: transparent;
+  box-shadow: none;
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--paper-2);
+  color: var(--ink);
+  border-color: var(--ink-3);
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12.5px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== Stamps ===== */
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+  background: transparent;
+  transform: rotate(-2deg);
+  line-height: 1.4;
+}
+
+.stamp-red   { color: var(--stamp-red); }
+.stamp-green { color: var(--forest); }
+.stamp-brown { color: var(--brown); }
+.stamp-ink   { color: var(--ink); }
+
+/* ===== Form fields ===== */
+.field {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--ink-3);
+  background: var(--paper);
+  border-radius: var(--r-md);
+  font-family: var(--font-dm-sans), sans-serif;
+  font-size: 15px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 120ms, box-shadow 120ms, transform 120ms;
+}
+.field::placeholder { color: var(--ink-3); }
+.field:focus {
+  border-color: var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  transform: translate(-1px, -1px);
+}
+
+.field-label {
+  display: block;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin-bottom: 6px;
+}
+
+/* ===== Progress bar (ruler look) ===== */
+.ruler-track {
+  height: 12px;
+  background:
+    repeating-linear-gradient(90deg, rgba(47,42,36,0.15) 0 1px, transparent 1px 12px),
+    var(--paper-2);
+  border: 1.5px solid var(--ink-3);
+  border-radius: 999px;
+  position: relative;
+  overflow: hidden;
+}
+.ruler-fill {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  background: var(--terracotta);
+  border-right: 1.5px solid var(--ink);
+  transition: width 400ms ease;
+}
+
+/* ===== Typography utilities ===== */
+.h-display {
+  font-family: var(--font-roboto-slab), Georgia, serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1.02;
+}
+
+.h-section {
+  font-family: var(--font-roboto-slab), Georgia, serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.eyebrow {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.label-mono {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+/* ===== Sketch underline ===== */
+.sketch-underline {
+  padding-bottom: 6px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 8'><path d='M2 5 C 40 1, 80 7, 120 4 S 200 2, 218 5' stroke='%23c97b4a' stroke-width='2.5' fill='none' stroke-linecap='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 100% 7px;
+}
+
+/* ===== Ornament divider ===== */
+.ornament {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-3);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.ornament::before,
+.ornament::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+/* ===== Avatar ===== */
+.avatar {
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-weight: 700;
+  color: var(--paper);
+  border: 1.5px solid var(--ink);
+  flex-shrink: 0;
+}
+
+/* ===== Book cover shadow ===== */
+.cover-shadow {
+  box-shadow:
+    0 0 0 1px rgba(47,42,36,0.35),
+    4px 6px 14px -6px rgba(47,42,36,0.4),
+    inset -3px 0 6px -3px rgba(0,0,0,0.3);
+}
+
+/* ===== Sticky note ===== */
+.sticky {
+  background: #f1d98a;
+  border: 1px solid rgba(47,42,36,0.2);
+  border-radius: 2px;
+  box-shadow: 2px 3px 8px -4px rgba(47,42,36,0.4);
+}
+
+/* ===== Tape strip ===== */
+.tape {
+  display: inline-block;
+  background: rgba(244, 226, 168, 0.65);
+  border-left: 1px dashed rgba(47,42,36,0.2);
+  border-right: 1px dashed rgba(47,42,36,0.2);
+  box-shadow: 0 2px 4px -2px rgba(47,42,36,0.2);
 }
