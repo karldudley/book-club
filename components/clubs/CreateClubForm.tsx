@@ -83,9 +83,9 @@ export default function CreateClubForm() {
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48, alignItems: 'flex-start' }}>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-start">
       {/* Left: form */}
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div>
           <label htmlFor="name" className="field-label">Club Name</label>
           <input
@@ -114,7 +114,7 @@ export default function CreateClubForm() {
 
         <div>
           <label className="field-label">Reading Cadence</label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginTop: 4 }}>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
             {CADENCE_OPTIONS.map((opt) => (
               <button
                 key={opt.weeks}

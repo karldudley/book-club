@@ -5,6 +5,7 @@ import BookActions from '@/components/clubs/BookActions'
 import ActivateBookButton from '@/components/clubs/ActivateBookButton'
 import RatingButton from '@/components/books/RatingButton'
 import { BookCover, Stamp, Avatar, StarRating, SketchDivider } from '@/components/ui/dogear'
+import { formatReadingTime } from '@/lib/utils/readingTime'
 
 export default async function ClubPage({ params }: { params: { id: string } }) {
   const supabase = await createClient()
@@ -87,30 +88,29 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
   return (
     <div>
       {/* Back nav */}
-      <Link
-        href="/clubs"
-        className="eyebrow"
-        style={{ color: 'var(--ink-2)', textDecoration: 'none', display: 'inline-block', marginBottom: 16 }}
-      >
+      <Link href="/clubs" className="eyebrow text-ink-2 no-underline inline-block mb-4">
         ← MY CLUBS
       </Link>
 
       {/* Club header card */}
-      <div className="card" style={{ padding: '24px 28px', marginBottom: 24, position: 'relative' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24, flexWrap: 'wrap' }}>
-          <div>
-            <p className="eyebrow" style={{ marginBottom: 6 }}>{members?.length || 0} members</p>
-            <h1 className="h-display" style={{ fontSize: 48, margin: 0, lineHeight: 0.95 }}>
+      <div className="card py-6 px-6 sm:px-7 mb-6 relative">
+        <div className="flex flex-wrap justify-between items-start gap-6">
+          <div className="min-w-0 flex-1">
+            <p className="eyebrow mb-1.5">{members?.length || 0} members</p>
+            <h1
+              className="h-display text-4xl sm:text-5xl m-0"
+              style={{ lineHeight: 0.95 }}
+            >
               {club.name}
             </h1>
             {club.description && (
-              <p style={{ fontSize: 15, color: 'var(--ink-2)', marginTop: 12, maxWidth: 540, lineHeight: 1.55 }}>
+              <p className="text-ink-2 mt-3 max-w-xl" style={{ fontSize: 15, lineHeight: 1.55 }}>
                 {club.description}
               </p>
             )}
-            <div style={{ display: 'flex', gap: 24, marginTop: 18, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div className="flex flex-wrap gap-6 mt-4 items-center">
               <div>
-                <p className="label-mono" style={{ marginBottom: 4 }}>Invite Code</p>
+                <p className="label-mono mb-1">Invite Code</p>
                 <span
                   style={{
                     fontFamily: 'var(--font-jetbrains-mono)',
@@ -127,12 +127,10 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                   {club.invite_code}
                 </span>
               </div>
-              <div style={{ width: 1, height: 40, background: 'var(--ink-3)', opacity: 0.3 }} />
+              <div className="w-px h-10 bg-ink-3 opacity-30" />
               <div>
-                <p className="label-mono" style={{ marginBottom: 4 }}>Cadence</p>
-                <span className="h-section" style={{ fontSize: 20 }}>
-                  Every {club.schedule_weeks} weeks
-                </span>
+                <p className="label-mono mb-1">Cadence</p>
+                <span className="h-section text-xl">Every {club.schedule_weeks} weeks</span>
               </div>
             </div>
           </div>
@@ -144,25 +142,25 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
 
       <SketchDivider />
 
-      {/* 2-column layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 24, marginTop: 24 }}>
+      {/* 2-column layout — stacks on mobile, side-by-side on large screens */}
+      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 mt-6">
 
         {/* LEFT COLUMN */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div className="flex flex-col gap-6">
 
           {/* Now Reading */}
-          <section className="card" style={{ padding: 28, position: 'relative', overflow: 'visible' }}>
-            <div style={{ position: 'absolute', top: 16, right: 18 }}>
+          <section className="card p-7 relative overflow-visible">
+            <div className="absolute top-4 right-4">
               <Stamp variant="green" rotate={-3}>● Now Reading</Stamp>
             </div>
-            <p className="label-mono" style={{ marginBottom: 16 }}>Currently active</p>
+            <p className="label-mono mb-4">Currently active</p>
 
             {activeBooks.length === 0 ? (
               <div
-                className="kraft-bg"
-                style={{ padding: '32px 24px', textAlign: 'center', border: '1px dashed var(--ink-3)', borderRadius: 8 }}
+                className="kraft-bg p-8 text-center rounded-lg"
+                style={{ border: '1px dashed var(--ink-3)' }}
               >
-                <p className="eyebrow" style={{ marginBottom: 12 }}>No active book yet</p>
+                <p className="eyebrow mb-3">No active book yet</p>
                 <Link href={`/clubs/${id}/search`} className="btn btn-accent btn-sm">
                   Suggest the first book
                 </Link>
@@ -170,29 +168,37 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
             ) : (
               activeBooks.map((book: any) => (
                 <div key={book.id}>
-                  <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+                  <div className="flex gap-4 sm:gap-6 items-start">
                     <BookCover url={book.cover_url} title={book.title} author={book.author} size="lg" />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <h2 className="h-display" style={{ fontSize: 32, margin: 0, lineHeight: 1 }}>{book.title}</h2>
+                    <div className="flex-1 min-w-0">
+                      <h2 className="h-display text-2xl sm:text-3xl m-0 leading-tight">{book.title}</h2>
                       {book.author && (
-                        <p style={{ fontFamily: 'var(--font-roboto-slab)', fontStyle: 'italic', fontSize: 16, color: 'var(--ink-2)', marginTop: 4 }}>
+                        <p className="text-ink-2 mt-1" style={{ fontFamily: 'var(--font-roboto-slab)', fontStyle: 'italic', fontSize: 16 }}>
                           by {book.author}
                         </p>
                       )}
-                      <div style={{ display: 'flex', gap: 12, marginTop: 10, flexWrap: 'wrap' }}>
+                      {book.page_count && (() => {
+                        const { read, listen } = formatReadingTime(book.page_count)
+                        return (
+                          <p className="label-mono mt-2">
+                            ⏱ {read} read · 🎧 {listen} listen
+                          </p>
+                        )
+                      })()}
+                      <div className="flex flex-wrap gap-3 mt-2">
                         <p className="eyebrow">
                           Picked by {book.profiles?.display_name || book.profiles?.email || 'someone'}
                         </p>
                         {book.deadline && (
                           <>
-                            <span className="eyebrow" style={{ opacity: 0.4 }}>·</span>
+                            <span className="eyebrow opacity-40">·</span>
                             <p className="eyebrow">
                               Due {new Date(book.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                             </p>
                           </>
                         )}
                       </div>
-                      <div style={{ marginTop: 18, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <div className="flex flex-wrap gap-2 items-center mt-4">
                         <RatingButton
                           bookId={book.id}
                           currentUserRating={book.currentUserRating}
@@ -204,21 +210,22 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                     </div>
                   </div>
                   {members && members.length > 0 && (
-                    <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px dashed var(--ink-3)' }}>
-                      <p className="eyebrow" style={{ marginBottom: 10 }}>Club members</p>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    <div className="mt-5 pt-4" style={{ borderTop: '1px dashed var(--ink-3)' }}>
+                      <p className="eyebrow mb-2">Club members</p>
+                      <div className="flex flex-wrap gap-2">
                         {members.map((m: any) => (
                           <div
                             key={m.id}
+                            className="flex items-center gap-2"
                             style={{
-                              display: 'flex', alignItems: 'center', gap: 8,
                               padding: '6px 10px',
-                              border: '1px solid var(--ink-3)', borderRadius: 8,
+                              border: '1px solid var(--ink-3)',
+                              borderRadius: 8,
                               background: 'var(--paper-2)',
                             }}
                           >
                             <Avatar name={memberName(m)} size={22} />
-                            <span style={{ fontSize: 12, color: 'var(--ink-2)' }}>{memberName(m)}</span>
+                            <span className="text-ink-2" style={{ fontSize: 12 }}>{memberName(m)}</span>
                           </div>
                         ))}
                       </div>
@@ -230,13 +237,13 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
           </section>
 
           {/* Suggestions */}
-          <section className="card" style={{ padding: 28 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+          <section className="card p-7">
+            <div className="flex flex-wrap justify-between items-end gap-3 mb-5">
               <div>
-                <p className="label-mono" style={{ marginBottom: 4 }}>
+                <p className="label-mono mb-1">
                   Up next · {suggestedBooks.length} suggestion{suggestedBooks.length !== 1 ? 's' : ''}
                 </p>
-                <h2 className="h-section" style={{ fontSize: 22, margin: 0 }}>
+                <h2 className="h-section text-xl sm:text-2xl m-0">
                   Vote on what's <span className="sketch-underline">next.</span>
                 </h2>
               </div>
@@ -246,18 +253,18 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
             </div>
 
             {suggestedBooks.length === 0 ? (
-              <p style={{ padding: '12px 0', color: 'var(--ink-3)', fontSize: 13, fontStyle: 'italic' }}>
+              <p className="text-ink-3 py-3" style={{ fontSize: 13, fontStyle: 'italic' }}>
                 No suggestions yet. Be the first to suggest a book.
               </p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div className="flex flex-col gap-3">
                 {suggestedBooks.map((book: any) => {
                   const isUsersBook = book.picked_by === user.id
                   return (
                     <div
                       key={book.id}
+                      className="flex gap-3 sm:gap-4 items-center"
                       style={{
-                        display: 'flex', gap: 14, alignItems: 'center',
                         padding: '14px 16px',
                         border: '1.5px solid var(--ink-3)',
                         borderRadius: 10,
@@ -265,19 +272,27 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                       }}
                     >
                       <BookCover url={book.cover_url} title={book.title} size="sm" />
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="flex-1 min-w-0">
                         <div style={{ fontFamily: 'var(--font-roboto-slab)', fontWeight: 700, fontSize: 16 }}>
                           {book.title}
                         </div>
                         {book.author && (
-                          <div style={{ fontSize: 13, color: 'var(--ink-2)' }}>{book.author}</div>
+                          <div className="text-ink-2" style={{ fontSize: 13 }}>{book.author}</div>
                         )}
-                        <p className="eyebrow" style={{ marginTop: 4 }}>
+                        {book.page_count && (() => {
+                          const { read, listen } = formatReadingTime(book.page_count)
+                          return (
+                            <p className="label-mono mt-1" style={{ fontSize: 9 }}>
+                              ⏱ {read} · 🎧 {listen}
+                            </p>
+                          )
+                        })()}
+                        <p className="eyebrow mt-1">
                           Suggested by {book.profiles?.display_name || book.profiles?.email || 'someone'}
                           {isUsersBook ? ' (you)' : ''}
                         </p>
                         {isAdmin && (
-                          <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+                          <div className="flex flex-wrap gap-2 mt-2">
                             <ActivateBookButton bookId={book.id} clubId={id} scheduleWeeks={club.schedule_weeks} hasActiveBook={activeBooks.length > 0} />
                             <BookActions bookId={book.id} bookStatus={book.status} isAdmin={isAdmin} clubId={id} />
                           </div>
@@ -292,17 +307,19 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
 
             {isAdmin && suggestedBooks.length > 0 && (
               <div
+                className="flex items-center gap-3 mt-4"
                 style={{
-                  marginTop: 16, padding: '12px 14px',
-                  border: '1px dashed var(--ink-3)', borderRadius: 8,
+                  padding: '12px 14px',
+                  border: '1px dashed var(--ink-3)',
+                  borderRadius: 8,
                   background: 'var(--paper-2)',
-                  display: 'flex', alignItems: 'center', gap: 12, fontSize: 13,
+                  fontSize: 13,
                 }}
               >
                 <span style={{ fontSize: 18 }}>🗳</span>
                 <div>
                   <div style={{ fontWeight: 600 }}>As admin, you activate the next book.</div>
-                  <div style={{ color: 'var(--ink-2)', fontSize: 12, marginTop: 2 }}>Click "Activate" on any suggestion above.</div>
+                  <div className="text-ink-2 mt-0.5" style={{ fontSize: 12 }}>Click &quot;Activate&quot; on any suggestion above.</div>
                 </div>
               </div>
             )}
@@ -310,30 +327,33 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
 
           {/* Past Reads */}
           {completedBooks.length > 0 && (
-            <section className="card" style={{ padding: 28 }}>
-              <p className="label-mono" style={{ marginBottom: 4 }}>
+            <section className="card p-7">
+              <p className="label-mono mb-1">
                 The bookshelf · {completedBooks.length} read{completedBooks.length !== 1 ? 's' : ''}
               </p>
-              <h2 className="h-section" style={{ fontSize: 22, margin: '0 0 20px' }}>Past reads</h2>
+              <h2 className="h-section text-xl sm:text-2xl mb-5 mt-0">Past reads</h2>
               <div>
                 {completedBooks.map((book: any, i: number) => (
                   <div
                     key={book.id}
+                    className="grid gap-3 sm:gap-4 items-center py-3"
                     style={{
-                      display: 'grid', gridTemplateColumns: 'auto 1fr auto',
-                      gap: 14, alignItems: 'center',
-                      padding: '12px 6px',
+                      gridTemplateColumns: 'auto 1fr auto',
                       borderBottom: i < completedBooks.length - 1 ? '1px dashed var(--ink-3)' : 'none',
                     }}
                   >
                     <BookCover url={book.cover_url} title={book.title} size="sm" />
                     <div>
                       <div style={{ fontFamily: 'var(--font-roboto-slab)', fontWeight: 700, fontSize: 15 }}>{book.title}</div>
-                      {book.author && <div style={{ fontSize: 12, color: 'var(--ink-2)' }}>{book.author}</div>}
+                      {book.author && <div className="text-ink-2" style={{ fontSize: 12 }}>{book.author}</div>}
+                      {book.page_count && (() => {
+                        const { read } = formatReadingTime(book.page_count)
+                        return <p className="label-mono mt-0.5" style={{ fontSize: 9 }}>⏱ {read}</p>
+                      })()}
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                    <div className="flex flex-col items-end gap-1.5">
                       {book.averageRating ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div className="flex items-center gap-1.5">
                           <StarRating rating={book.averageRating} size={12} />
                           <span className="label-mono">{book.averageRating.toFixed(1)}</span>
                         </div>
@@ -348,20 +368,20 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
         </div>
 
         {/* RIGHT COLUMN */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div className="flex flex-col gap-6">
 
           {/* Members */}
-          <section className="card" style={{ padding: 24 }}>
-            <p className="label-mono" style={{ marginBottom: 4 }}>Members · {members?.length || 0}</p>
-            <h3 className="h-section" style={{ fontSize: 20, margin: '0 0 16px' }}>The regulars</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <section className="card p-6">
+            <p className="label-mono mb-1">Members · {members?.length || 0}</p>
+            <h3 className="h-section text-xl mb-4 mt-0">The regulars</h3>
+            <div className="flex flex-col gap-2.5">
               {members?.map((m: any) => (
-                <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div key={m.id} className="flex items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-2.5">
                     <Avatar name={memberName(m)} size={34} />
                     <div>
                       <div style={{ fontSize: 13.5, fontWeight: 600 }}>{memberName(m)}</div>
-                      <div style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>
+                      <div className="text-ink-3" style={{ fontSize: 11.5 }}>
                         {club.admin_id === m.profiles?.id ? 'Admin · founder' : 'Member'}
                       </div>
                     </div>
@@ -372,17 +392,14 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                 </div>
               ))}
             </div>
-            <button
-              className="btn btn-paper btn-sm"
-              style={{ width: '100%', marginTop: 18 }}
-            >
+            <button className="btn btn-paper btn-sm w-full mt-4">
               Share invite code →
             </button>
           </section>
 
           {/* Sticky note hint */}
           {!userSuggestion && (
-            <div className="sticky" style={{ padding: 18, transform: 'rotate(-1.5deg)' }}>
+            <div className="sticky max-w-full overflow-hidden" style={{ padding: 18, transform: 'rotate(-1.5deg)' }}>
               <div style={{ fontFamily: 'var(--font-caveat)', fontSize: 17, lineHeight: 1.4, color: 'var(--ink)' }}>
                 Haven't suggested a book yet? The queue is open.
               </div>

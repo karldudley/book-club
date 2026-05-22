@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import BookSearch from '@/components/books/BookSearch'
 import { GoogleBook } from '@/lib/api/googleBooks'
+import { formatReadingTime } from '@/lib/utils/readingTime'
 import { createClient } from '@/lib/supabase/client'
 import { use } from 'react'
 import { BookCover, Stamp } from '@/components/ui/dogear'
@@ -52,6 +53,7 @@ export default function SearchPage({ params }: { params: Promise<{ id: string }>
             title: selectedBook.volumeInfo.title,
             author: selectedBook.volumeInfo.authors?.join(', ') || null,
             cover_url: selectedBook.volumeInfo.imageLinks?.thumbnail || null,
+            page_count: selectedBook.volumeInfo.pageCount ?? null,
           })
           .eq('id', existingSuggestion.id)
 
@@ -65,6 +67,7 @@ export default function SearchPage({ params }: { params: Promise<{ id: string }>
             title: selectedBook.volumeInfo.title,
             author: selectedBook.volumeInfo.authors?.join(', ') || null,
             cover_url: selectedBook.volumeInfo.imageLinks?.thumbnail || null,
+            page_count: selectedBook.volumeInfo.pageCount ?? null,
             picked_by: user.id,
             status: 'suggested',
             start_date: null,
@@ -134,6 +137,14 @@ export default function SearchPage({ params }: { params: Promise<{ id: string }>
                   {selectedBook.volumeInfo.pageCount ? ` · ${selectedBook.volumeInfo.pageCount} pp` : ''}
                 </p>
               )}
+              {selectedBook.volumeInfo.pageCount && (() => {
+                const { read, listen } = formatReadingTime(selectedBook.volumeInfo.pageCount)
+                return (
+                  <p className="label-mono" style={{ marginTop: 8 }}>
+                    ⏱ {read} read · 🎧 {listen} listen
+                  </p>
+                )
+              })()}
               {selectedBook.volumeInfo.description && (
                 <p
                   style={{

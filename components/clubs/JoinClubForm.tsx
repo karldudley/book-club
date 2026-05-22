@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -51,20 +51,17 @@ export default function JoinClubForm() {
 
       if (!user) throw new Error('Not authenticated')
 
-      const { data: club, error: clubError } = await supabase
-        .from('clubs')
-        .select('id')
-        .eq('invite_code', inviteCode)
-        .single() as { data: any; error: any }
+      const { data: clubId, error: clubError } = await (supabase as any)
+        .rpc('get_club_id_by_invite_code', { p_code: inviteCode })
 
-      if (clubError || !club) {
+      if (clubError || !clubId) {
         throw new Error('Invalid invite code')
       }
 
       const { data: existingMember } = await supabase
         .from('club_members')
         .select('id')
-        .eq('club_id', club.id)
+        .eq('club_id', clubId)
         .eq('user_id', user.id)
         .single() as { data: any }
 
@@ -75,13 +72,13 @@ export default function JoinClubForm() {
       const { error: memberError } = await (supabase
         .from('club_members') as any)
         .insert({
-          club_id: club.id,
+          club_id: clubId,
           user_id: user.id,
         })
 
       if (memberError) throw memberError
 
-      router.push(`/clubs/${club.id}`)
+      router.push(`/clubs/${clubId}`)
     } catch (err: any) {
       setError(err.message)
     } finally {

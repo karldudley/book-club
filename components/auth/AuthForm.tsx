@@ -58,7 +58,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
   return (
     <div className="card" style={{ overflow: 'hidden' }}>
       {/* Main form area */}
-      <div style={{ padding: '36px 40px 28px' }}>
+      <div className="px-6 sm:px-10 pt-8 sm:pt-9 pb-7">
         <DogearLogo />
 
         <div style={{ marginTop: 28 }}>
@@ -77,7 +77,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
           </h1>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ marginTop: 28, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-7">
           {mode === 'signup' && (
             <div>
               <label htmlFor="displayName" className="field-label">
@@ -160,13 +160,11 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
       {/* Footer */}
       <div
+        className="px-6 sm:px-10 py-5 text-center text-ink-2"
         style={{
-          padding: '18px 40px 24px',
           borderTop: '1px dashed var(--ink-3)',
           background: 'var(--paper-2)',
           fontSize: 13,
-          color: 'var(--ink-2)',
-          textAlign: 'center',
         }}
       >
         {mode === 'login' ? (

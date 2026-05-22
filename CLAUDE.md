@@ -19,9 +19,17 @@ CSS utility classes are in `app/globals.css`. Key ones:
 - `.btn`, `.btn-primary`, `.btn-accent`, `.btn-paper`, `.btn-ghost`, `.btn-sm`
 - `.stamp`, `.stamp-red`, `.stamp-green`, `.stamp-brown`, `.stamp-ink`
 - `.field`, `.field-label` — form inputs
-- `.h-display`, `.h-section`, `.eyebrow`, `.label-mono` — typography
+- `.h-display`, `.h-section`, `.eyebrow`, `.label-mono` — typography (no font-size set — specify via Tailwind `text-*` classes)
 - `.sketch-underline` — wavy terracotta underline via SVG background-image
 - `.kraft-bg`, `.paper-bg` — background fills
+- `.nav-link` — navigation anchor with hover state (replaces JS onMouseEnter/onMouseLeave)
+
+## Styling conventions
+- **Tailwind-first for layout**: use Tailwind utilities for all flex, grid, gap, padding, margin, sizing. Responsive prefixes: `sm:` (640px), `md:` (768px), `lg:` (1024px).
+- **globals.css classes for design**: `.card`, `.btn`, `.stamp`, etc. handle the Dogear aesthetic — don't duplicate these with inline styles.
+- **Inline styles only for**: genuinely dynamic/computed values (hash-derived avatar/cover colours, JS-driven interaction states like selected ratings or focus transforms). Never for static layout.
+- **CSS layer gotcha**: globals.css classes are unlayered CSS and have higher cascade priority than Tailwind's `@layer utilities`. This means a Tailwind responsive utility like `md:hidden` will be overridden by a class that sets `display` (e.g. `.btn { display: inline-flex }`). Workaround: wrap the element in a plain `<div className="md:hidden">` instead of putting the responsive class on the element itself.
+- **Heading sizes**: `.h-display` and `.h-section` set font-family/weight/tracking but not size. Always pair with a Tailwind size, e.g. `className="h-display text-4xl sm:text-5xl"`. Use responsive sizes for large headings so they scale down on mobile.
 
 ## Routes
 ```
@@ -40,7 +48,7 @@ CSS utility classes are in `app/globals.css`. Key ones:
 - **profiles** — `id, email, display_name, avatar_url, created_at`
 - **clubs** — `id, name, description, admin_id, invite_code, rotation_rule, schedule_weeks, created_at`
 - **club_members** — `id, club_id, user_id, joined_at, turn_order`
-- **club_books** — `id, club_id, google_books_id, title, author, cover_url, picked_by, status ('suggested'|'active'|'completed'), start_date, deadline, created_at`
+- **club_books** — `id, club_id, google_books_id, title, author, cover_url, page_count, picked_by, status ('suggested'|'active'|'completed'), start_date, deadline, created_at`
 - **book_ratings** — `id, book_id (→ club_books.id), user_id, rating (1-10), updated_at`
 - **user_book_progress** — `id, club_book_id, user_id, status ('not_started'|'reading'|'completed'), started_at, completed_at, rating`
 
@@ -86,8 +94,24 @@ create policy "clubs_delete" on clubs for delete using (admin_id = auth.uid());
 ```
 The `admin_id = auth.uid()` on `clubs_select` is required so a user can read back the club immediately after inserting it (before they're added as a member). Without it, `INSERT ... RETURNING *` returns a 403.
 
+**Invite code lookup** — the clubs RLS policy blocks non-members from querying clubs, so joining by invite code uses a `security definer` RPC instead of a direct SELECT:
+```sql
+create or replace function public.get_club_id_by_invite_code(p_code text)
+returns uuid
+language sql security definer set search_path = public stable
+as $$
+  select id from public.clubs where invite_code = upper(p_code);
+$$;
+```
+Called via `supabase.rpc('get_club_id_by_invite_code', { p_code })` in `components/clubs/JoinClubForm.tsx`.
+
+## Utilities
+- **`lib/utils/readingTime.ts`** — `formatReadingTime(pages)` returns `{ read, listen }` formatted strings (e.g. `"5h 20m"`). 1 page ≈ 1 min reading (250 wpm), 1.75 min listening (155 wpm). Used on the club detail page and the search confirmation card.
+- **`lib/utils/inviteCode.ts`** — generates the 6-char alphanumeric invite codes.
+- **`lib/utils/queryParser.ts`** — optimises raw search strings before sending to Google Books.
+
 ## External APIs
-- **Google Books API** — key in `.env.local` as `GOOGLE_BOOKS_API_KEY`. Without a key it hits quota almost immediately. Route: `app/api/books/search/route.ts` → `lib/api/googleBooks.ts`.
+- **Google Books API** — key in `.env.local` as `GOOGLE_BOOKS_API_KEY`. Without a key it hits quota almost immediately. Route: `app/api/books/search/route.ts` → `lib/api/googleBooks.ts`. The `pageCount` field from `volumeInfo` is saved to `club_books.page_count` on suggestion.
 
 ## What's intentionally not implemented
 The DB schema doesn't support these features so they were skipped in the UI:

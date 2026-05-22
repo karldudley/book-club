@@ -32,10 +32,10 @@ export default async function ClubsPage() {
   return (
     <div>
       {/* Header strip */}
-      <div style={{ marginBottom: 40 }}>
-        <p className="eyebrow" style={{ marginBottom: 10 }}>Your reading groups</p>
-        <div className="flex justify-between items-end gap-4 flex-wrap" style={{ marginBottom: 12 }}>
-          <h1 className="h-display" style={{ fontSize: 48 }}>My Book Clubs</h1>
+      <div className="mb-10">
+        <p className="eyebrow mb-2">Your reading groups</p>
+        <div className="flex justify-between items-end gap-4 flex-wrap mb-3">
+          <h1 className="h-display text-4xl sm:text-5xl">My Book Clubs</h1>
           <div className="flex gap-3">
             <Link href="/clubs/new" className="btn btn-primary">Start a Club</Link>
             <Link href="/join" className="btn btn-paper">Join with Code</Link>
@@ -46,7 +46,7 @@ export default async function ClubsPage() {
 
       {clubs.length === 0 ? (
         /* Empty state */
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, maxWidth: 720 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl">
           <Link href="/clubs/new" className="card lift block" style={{ padding: 32, textDecoration: 'none', color: 'inherit', position: 'relative' }}>
             <p className="label-mono" style={{ marginBottom: 8 }}>01 — Start a club</p>
             <h3 className="h-section" style={{ fontSize: 22, margin: '0 0 10px' }}>Open a new shelf</h3>

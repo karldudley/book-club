@@ -330,3 +330,16 @@ body {
   border-right: 1px dashed rgba(47,42,36,0.2);
   box-shadow: 0 2px 4px -2px rgba(47,42,36,0.2);
 }
+
+/* ===== Nav links ===== */
+.nav-link {
+  padding: 8px 12px;
+  border-radius: var(--r-sm);
+  text-decoration: none;
+  color: var(--ink-2);
+  transition: color 120ms, background 120ms;
+}
+.nav-link:hover {
+  color: var(--ink);
+  background: var(--paper-2);
+}
