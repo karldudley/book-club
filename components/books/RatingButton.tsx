@@ -7,6 +7,8 @@ import { StarRating } from '@/components/ui/dogear'
 
 interface RatingButtonProps {
   bookId: string
+  clubId: string
+  bookTitle: string
   currentUserRating?: number
   averageRating?: number
   totalRatings?: number
@@ -14,6 +16,8 @@ interface RatingButtonProps {
 
 export default function RatingButton({
   bookId,
+  clubId,
+  bookTitle,
   currentUserRating,
   averageRating,
   totalRatings,
@@ -48,6 +52,14 @@ export default function RatingButton({
         )
 
       if (error) throw error
+
+      await (supabase.from('club_events') as any).insert({
+        club_id: clubId,
+        actor_id: user.id,
+        event_type: 'book_rated',
+        book_id: bookId,
+        payload: { book_title: bookTitle, rating: selectedRating },
+      })
 
       setShowModal(false)
       router.refresh()

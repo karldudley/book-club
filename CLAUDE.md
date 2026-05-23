@@ -1,7 +1,7 @@
 # Dogear — Project Notes for Agents
 
 ## What this is
-A book club web app called **Dogear**. Members join clubs, suggest books, vote on what to read next, and rate books they've finished. Indie-bookstore aesthetic: parchment palette, Roboto Slab headings, ink stamps, hard drop-shadow cards.
+A book club web app called **Dogear**. Members join clubs, suggest books, and rate books they've finished. Indie-bookstore aesthetic: parchment palette, Roboto Slab headings, ink stamps, hard drop-shadow cards.
 
 ## Tech stack
 - **Next.js 15** (App Router), **React 19**, **TypeScript**
@@ -37,7 +37,7 @@ CSS utility classes are in `app/globals.css`. Key ones:
 /signup                       Auth
 /clubs                        List of user's clubs
 /clubs/new                    Create a club
-/clubs/[id]                   Club detail (now reading, suggestions, past reads, members)
+/clubs/[id]                   Club detail (now reading, suggestions, past reads, members, activity)
 /clubs/[id]/search            Search Google Books + suggest a book
 /join                         Join a club via 6-char invite code
 ```
@@ -48,9 +48,10 @@ CSS utility classes are in `app/globals.css`. Key ones:
 - **profiles** — `id, email, display_name, avatar_url, created_at`
 - **clubs** — `id, name, description, admin_id, invite_code, rotation_rule, schedule_weeks, created_at`
 - **club_members** — `id, club_id, user_id, joined_at, turn_order`
-- **club_books** — `id, club_id, google_books_id, title, author, cover_url, page_count, picked_by, status ('suggested'|'active'|'completed'), start_date, deadline, created_at`
+- **club_books** — `id, club_id, google_books_id, title, author, cover_url, page_count, picked_by, status ('suggested'|'active'|'completed'), is_secret, start_date, deadline, created_at`
 - **book_ratings** — `id, book_id (→ club_books.id), user_id, rating (1-10), updated_at`
 - **user_book_progress** — `id, club_book_id, user_id, status ('not_started'|'reading'|'completed'), started_at, completed_at, rating`
+- **club_events** — `id, club_id, actor_id, event_type, book_id, payload (jsonb), created_at`
 
 ### Admin model
 Admin is determined by `clubs.admin_id = auth.uid()`. There is **no role column** on `club_members`.
@@ -70,9 +71,9 @@ end;
 $$ language plpgsql security definer set search_path = public;
 ```
 
-**club_members policies** — must NOT self-reference (causes infinite recursion). Use simple `user_id = auth.uid()` only:
+**club_members policies** — the SELECT policy uses `is_club_member` (which is `security definer` and bypasses RLS internally, so no recursion):
 ```sql
-create policy "cm_select" on club_members for select using (user_id = auth.uid());
+create policy "cm_select" on club_members for select using (public.is_club_member(club_id));
 create policy "cm_insert" on club_members for insert with check (user_id = auth.uid());
 create policy "cm_delete" on club_members for delete using (user_id = auth.uid());
 ```
@@ -94,6 +95,23 @@ create policy "clubs_delete" on clubs for delete using (admin_id = auth.uid());
 ```
 The `admin_id = auth.uid()` on `clubs_select` is required so a user can read back the club immediately after inserting it (before they're added as a member). Without it, `INSERT ... RETURNING *` returns a 403.
 
+**club_books policies** — secret suggested books are hidden from everyone except the suggester and the club admin, until activated:
+```sql
+create policy "cb_select" on club_books for select
+  using (
+    public.is_club_member(club_id) and (
+      picked_by = auth.uid()
+      or status in ('active', 'completed')
+      or not is_secret
+      or exists (
+        select 1 from public.clubs
+        where clubs.id = club_books.club_id
+          and clubs.admin_id = auth.uid()
+      )
+    )
+  );
+```
+
 **Invite code lookup** — the clubs RLS policy blocks non-members from querying clubs, so joining by invite code uses a `security definer` RPC instead of a direct SELECT:
 ```sql
 create or replace function public.get_club_id_by_invite_code(p_code text)
@@ -105,6 +123,52 @@ $$;
 ```
 Called via `supabase.rpc('get_club_id_by_invite_code', { p_code })` in `components/clubs/JoinClubForm.tsx`.
 
+**club_events policies** — club members can select; users can only insert their own events:
+```sql
+create policy "ce_select" on club_events for select
+  using (public.is_club_member(club_id));
+create policy "ce_insert" on club_events for insert
+  with check (public.is_club_member(club_id) and actor_id = auth.uid());
+```
+
+**user_book_progress policies** — club members can see all progress for books in their clubs; users can only write their own rows:
+```sql
+create policy "ubp_select" on user_book_progress for select
+  using (
+    exists (
+      select 1 from public.club_books cb
+      where cb.id = user_book_progress.club_book_id
+        and public.is_club_member(cb.club_id)
+    )
+  );
+create policy "ubp_insert" on user_book_progress for insert
+  with check (user_id = auth.uid());
+create policy "ubp_update" on user_book_progress for update
+  using (user_id = auth.uid());
+```
+
+## Secret suggestions
+Members can suggest a book with `is_secret: true`. While secret and `status = 'suggested'`:
+- The suggester sees their book normally with a "Secret" stamp
+- Other members cannot see it (RLS hides it)
+- The admin sees a mystery card (black `?` cover, "Secret suggestion" title) with a "Reveal & Activate →" button
+- On activation, `is_secret` is set to `false` and `status` to `active` simultaneously
+
+## Activity feed (`club_events`)
+Events are inserted app-side (not via DB triggers) immediately after each action. Event types and their payload shapes:
+- `book_suggested` — `{ book_title?, is_secret: bool }` (title omitted when secret)
+- `book_activated` — `{ book_title, was_secret: bool }`
+- `book_completed` — `{ book_title }`
+- `book_rated` — `{ book_title, rating: number }`
+- `member_joined` — `{}`
+
+Components that insert events: `search/page.tsx`, `ActivateBookButton.tsx`, `BookActions.tsx`, `RatingButton.tsx`, `JoinClubForm.tsx`.
+
+The feed is rendered by `components/clubs/ActivityFeed.tsx` (server component) at the bottom of the club detail page.
+
+## Reading progress (`user_book_progress`)
+Shown on the active book card via `components/clubs/ReadingProgress.tsx` (client component). Each member has a status chip (grey = Not started, amber = Reading, green = Finished). Members click their own chip to cycle through the three states; it upserts to `user_book_progress` optimistically. Other members' statuses are read-only.
+
 ## Utilities
 - **`lib/utils/readingTime.ts`** — `formatReadingTime(pages)` returns `{ read, listen }` formatted strings (e.g. `"5h 20m"`). 1 page ≈ 1 min reading (250 wpm), 1.75 min listening (155 wpm). Used on the club detail page and the search confirmation card.
 - **`lib/utils/inviteCode.ts`** — generates the 6-char alphanumeric invite codes.
@@ -115,7 +179,5 @@ Called via `supabase.rpc('get_club_id_by_invite_code', { p_code })` in `componen
 
 ## What's intentionally not implemented
 The DB schema doesn't support these features so they were skipped in the UI:
-- Per-member reading progress % (only `status: not_started|reading|completed`)
 - Upvote counts on suggestions (no votes table)
-- Activity feed (no events table)
 - Discover / My Shelf pages (no routes exist)

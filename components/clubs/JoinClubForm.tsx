@@ -78,6 +78,13 @@ export default function JoinClubForm() {
 
       if (memberError) throw memberError
 
+      await (supabase.from('club_events') as any).insert({
+        club_id: clubId,
+        actor_id: user.id,
+        event_type: 'member_joined',
+        payload: {},
+      })
+
       router.push(`/clubs/${clubId}`)
     } catch (err: any) {
       setError(err.message)

@@ -95,7 +95,10 @@ export interface Database {
           title: string
           author: string | null
           cover_url: string | null
+          page_count: number | null
           picked_by: string | null
+          status: 'suggested' | 'active' | 'completed'
+          is_secret: boolean
           start_date: string | null
           deadline: string | null
           created_at: string
@@ -107,7 +110,10 @@ export interface Database {
           title: string
           author?: string | null
           cover_url?: string | null
+          page_count?: number | null
           picked_by?: string | null
+          status?: 'suggested' | 'active' | 'completed'
+          is_secret?: boolean
           start_date?: string | null
           deadline?: string | null
           created_at?: string
@@ -119,9 +125,41 @@ export interface Database {
           title?: string
           author?: string | null
           cover_url?: string | null
+          page_count?: number | null
           picked_by?: string | null
+          status?: 'suggested' | 'active' | 'completed'
+          is_secret?: boolean
           start_date?: string | null
           deadline?: string | null
+          created_at?: string
+        }
+      }
+      club_events: {
+        Row: {
+          id: string
+          club_id: string
+          actor_id: string
+          event_type: string
+          book_id: string | null
+          payload: Record<string, unknown>
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          club_id: string
+          actor_id: string
+          event_type: string
+          book_id?: string | null
+          payload?: Record<string, unknown>
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          club_id?: string
+          actor_id?: string
+          event_type?: string
+          book_id?: string | null
+          payload?: Record<string, unknown>
           created_at?: string
         }
       }

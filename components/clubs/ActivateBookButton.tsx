@@ -9,9 +9,11 @@ interface ActivateBookButtonProps {
   clubId: string
   scheduleWeeks: number
   hasActiveBook: boolean
+  bookTitle: string
+  isSecret: boolean
 }
 
-export default function ActivateBookButton({ bookId, clubId, scheduleWeeks, hasActiveBook }: ActivateBookButtonProps) {
+export default function ActivateBookButton({ bookId, clubId, scheduleWeeks, hasActiveBook, bookTitle, isSecret }: ActivateBookButtonProps) {
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0])
@@ -35,18 +37,32 @@ export default function ActivateBookButton({ bookId, clubId, scheduleWeeks, hasA
   const handleActivate = async () => {
     setLoading(true)
     try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
       const deadline = calculateDeadline(startDate)
 
       const { error } = await (supabase
         .from('club_books') as any)
         .update({
           status: 'active',
+          is_secret: false,
           start_date: startDate,
           deadline: deadline,
         })
         .eq('id', bookId)
 
       if (error) throw error
+
+      await (supabase.from('club_events') as any).insert({
+        club_id: clubId,
+        actor_id: user.id,
+        event_type: 'book_activated',
+        book_id: bookId,
+        payload: { book_title: bookTitle, was_secret: isSecret },
+      })
 
       setShowModal(false)
       router.refresh()
@@ -63,7 +79,7 @@ export default function ActivateBookButton({ bookId, clubId, scheduleWeeks, hasA
         onClick={() => setShowModal(true)}
         className="btn btn-accent btn-sm"
       >
-        Activate this book →
+        {isSecret ? 'Reveal & Activate →' : 'Activate this book →'}
       </button>
 
       {showModal && (
@@ -77,7 +93,9 @@ export default function ActivateBookButton({ bookId, clubId, scheduleWeeks, hasA
           onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false) }}
         >
           <div className="card" style={{ padding: 28, maxWidth: 380, width: '100%', background: 'var(--paper)' }}>
-            <h3 className="h-section" style={{ fontSize: 22, margin: '0 0 20px' }}>Activate Book</h3>
+            <h3 className="h-section" style={{ fontSize: 22, margin: '0 0 20px' }}>
+              {isSecret ? 'Reveal & Activate' : 'Activate Book'}
+            </h3>
 
             <div style={{ marginBottom: 16 }}>
               <label htmlFor="startDate" className="field-label">Start Date</label>

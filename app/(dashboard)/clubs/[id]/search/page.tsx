@@ -13,6 +13,7 @@ import { BookCover, Stamp } from '@/components/ui/dogear'
 export default function SearchPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const [selectedBook, setSelectedBook] = useState<GoogleBook | null>(null)
+  const [isSecret, setIsSecret] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -45,37 +46,54 @@ export default function SearchPage({ params }: { params: Promise<{ id: string }>
         .eq('status', 'suggested')
         .single() as { data: any }
 
+      const title = selectedBook.volumeInfo.title
+      let bookId: string
+
       if (existingSuggestion) {
         const { error: updateError } = await (supabase
           .from('club_books') as any)
           .update({
             google_books_id: selectedBook.id,
-            title: selectedBook.volumeInfo.title,
+            title,
             author: selectedBook.volumeInfo.authors?.join(', ') || null,
             cover_url: selectedBook.volumeInfo.imageLinks?.thumbnail || null,
             page_count: selectedBook.volumeInfo.pageCount ?? null,
+            is_secret: isSecret,
           })
           .eq('id', existingSuggestion.id)
 
         if (updateError) throw updateError
+        bookId = existingSuggestion.id
       } else {
-        const { error: insertError } = await (supabase
+        const { data: inserted, error: insertError } = await (supabase
           .from('club_books') as any)
           .insert({
             club_id: id,
             google_books_id: selectedBook.id,
-            title: selectedBook.volumeInfo.title,
+            title,
             author: selectedBook.volumeInfo.authors?.join(', ') || null,
             cover_url: selectedBook.volumeInfo.imageLinks?.thumbnail || null,
             page_count: selectedBook.volumeInfo.pageCount ?? null,
             picked_by: user.id,
             status: 'suggested',
+            is_secret: isSecret,
             start_date: null,
             deadline: null,
           })
+          .select('id')
+          .single()
 
         if (insertError) throw insertError
+        bookId = inserted.id
       }
+
+      await (supabase.from('club_events') as any).insert({
+        club_id: id,
+        actor_id: user.id,
+        event_type: 'book_suggested',
+        book_id: bookId,
+        payload: isSecret ? { is_secret: true } : { book_title: title, is_secret: false },
+      })
 
       router.push(`/clubs/${id}`)
     } catch (err: any) {
@@ -155,6 +173,24 @@ export default function SearchPage({ params }: { params: Promise<{ id: string }>
                   {selectedBook.volumeInfo.description}
                 </p>
               )}
+
+              <label
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  marginTop: 14, cursor: 'pointer', userSelect: 'none',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={isSecret}
+                  onChange={(e) => setIsSecret(e.target.checked)}
+                  style={{ width: 16, height: 16, accentColor: 'var(--ink)', cursor: 'pointer' }}
+                />
+                <span style={{ fontFamily: 'var(--font-jetbrains-mono)', fontSize: 11, letterSpacing: '0.04em' }}>
+                  Keep secret until activated
+                </span>
+                {isSecret && <Stamp variant="ink" rotate={-2} style={{ fontSize: 9 }}>Secret</Stamp>}
+              </label>
             </div>
           </div>
 

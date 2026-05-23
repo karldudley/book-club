@@ -3,8 +3,10 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import BookActions from '@/components/clubs/BookActions'
 import ActivateBookButton from '@/components/clubs/ActivateBookButton'
+import ActivityFeed from '@/components/clubs/ActivityFeed'
+import ReadingProgress from '@/components/clubs/ReadingProgress'
 import RatingButton from '@/components/books/RatingButton'
-import { BookCover, Stamp, Avatar, StarRating, SketchDivider } from '@/components/ui/dogear'
+import { BookCover, Stamp, Avatar, SketchDivider } from '@/components/ui/dogear'
 import { formatReadingTime } from '@/lib/utils/readingTime'
 
 export default async function ClubPage({ params }: { params: { id: string } }) {
@@ -60,6 +62,29 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
     .from('book_ratings')
     .select('*')
     .in('book_id', books?.map((b: any) => b.id) || []) as { data: any[] }
+
+  const activeBookIds = books?.filter((b: any) => b.status === 'active').map((b: any) => b.id) || []
+  const { data: progress } = await (supabase
+    .from('user_book_progress') as any)
+    .select('club_book_id, user_id, status')
+    .in('club_book_id', activeBookIds) as { data: any[] }
+
+  const { data: events } = await (supabase
+    .from('club_events') as any)
+    .select(`
+      id,
+      event_type,
+      payload,
+      created_at,
+      actor:actor_id (
+        id,
+        display_name,
+        email
+      )
+    `)
+    .eq('club_id', id)
+    .order('created_at', { ascending: false })
+    .limit(20) as { data: any[] }
 
   const bookRatings = books?.map((book: any) => {
     const bookRatingsList = ratings?.filter((r: any) => r.book_id === book.id) || []
@@ -153,7 +178,8 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
             <div className="absolute top-4 right-4">
               <Stamp variant="green" rotate={-3}>● Now Reading</Stamp>
             </div>
-            <p className="label-mono mb-4">Currently active</p>
+            <p className="label-mono mb-1">Currently active</p>
+            <h2 className="h-section text-xl sm:text-2xl mb-5 mt-0">Now reading</h2>
 
             {activeBooks.length === 0 ? (
               <div
@@ -201,34 +227,32 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                       <div className="flex flex-wrap gap-2 items-center mt-4">
                         <RatingButton
                           bookId={book.id}
+                          clubId={id}
+                          bookTitle={book.title}
                           currentUserRating={book.currentUserRating}
                           averageRating={book.averageRating}
                           totalRatings={book.totalRatings}
                         />
-                        <BookActions bookId={book.id} bookStatus={book.status} isAdmin={isAdmin} clubId={id} />
                       </div>
                     </div>
                   </div>
                   {members && members.length > 0 && (
                     <div className="mt-5 pt-4" style={{ borderTop: '1px dashed var(--ink-3)' }}>
-                      <p className="eyebrow mb-2">Club members</p>
-                      <div className="flex flex-wrap gap-2">
-                        {members.map((m: any) => (
-                          <div
-                            key={m.id}
-                            className="flex items-center gap-2"
-                            style={{
-                              padding: '6px 10px',
-                              border: '1px solid var(--ink-3)',
-                              borderRadius: 8,
-                              background: 'var(--paper-2)',
-                            }}
-                          >
-                            <Avatar name={memberName(m)} size={22} />
-                            <span className="text-ink-2" style={{ fontSize: 12 }}>{memberName(m)}</span>
-                          </div>
-                        ))}
-                      </div>
+                      <ReadingProgress
+                        bookId={book.id}
+                        members={members as any}
+                        progressRows={progress?.filter((p: any) => p.club_book_id === book.id) || []}
+                        currentUserId={user.id}
+                      />
+                    </div>
+                  )}
+                  {isAdmin && (
+                    <div
+                      className="flex items-center justify-between gap-3 mt-5 pt-4"
+                      style={{ borderTop: '1px dashed var(--ink-3)' }}
+                    >
+                      <p className="eyebrow">Admin</p>
+                      <BookActions bookId={book.id} bookTitle={book.title} bookStatus={book.status} isAdmin={isAdmin} clubId={id} />
                     </div>
                   )}
                 </div>
@@ -244,7 +268,7 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                   Up next · {suggestedBooks.length} suggestion{suggestedBooks.length !== 1 ? 's' : ''}
                 </p>
                 <h2 className="h-section text-xl sm:text-2xl m-0">
-                  Vote on what's <span className="sketch-underline">next.</span>
+                  What shall we <span className="sketch-underline">read next?</span>
                 </h2>
               </div>
               <Link href={`/clubs/${id}/search`} className="btn btn-accent btn-sm">
@@ -260,26 +284,41 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
               <div className="flex flex-col gap-3">
                 {suggestedBooks.map((book: any) => {
                   const isUsersBook = book.picked_by === user.id
+                  const isMystery = book.is_secret && !isUsersBook
                   return (
                     <div
                       key={book.id}
                       className="flex gap-3 sm:gap-4 items-center"
                       style={{
                         padding: '14px 16px',
-                        border: '1.5px solid var(--ink-3)',
+                        border: `1.5px solid ${isMystery ? 'var(--ink)' : 'var(--ink-3)'}`,
                         borderRadius: 10,
-                        background: isUsersBook ? 'var(--paper-2)' : 'var(--paper)',
+                        background: isUsersBook ? 'var(--paper-2)' : isMystery ? 'var(--kraft)' : 'var(--paper)',
                       }}
                     >
-                      <BookCover url={book.cover_url} title={book.title} size="sm" />
+                      {isMystery ? (
+                        <div
+                          style={{
+                            width: 40, height: 56, flexShrink: 0,
+                            background: 'var(--ink)', borderRadius: 4,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            color: 'var(--paper)', fontFamily: 'var(--font-roboto-slab)',
+                            fontWeight: 700, fontSize: 20,
+                          }}
+                        >
+                          ?
+                        </div>
+                      ) : (
+                        <BookCover url={book.cover_url} title={book.title} size="sm" />
+                      )}
                       <div className="flex-1 min-w-0">
                         <div style={{ fontFamily: 'var(--font-roboto-slab)', fontWeight: 700, fontSize: 16 }}>
-                          {book.title}
+                          {isMystery ? 'Secret suggestion' : book.title}
                         </div>
-                        {book.author && (
+                        {!isMystery && book.author && (
                           <div className="text-ink-2" style={{ fontSize: 13 }}>{book.author}</div>
                         )}
-                        {book.page_count && (() => {
+                        {!isMystery && book.page_count && (() => {
                           const { read, listen } = formatReadingTime(book.page_count)
                           return (
                             <p className="label-mono mt-1" style={{ fontSize: 9 }}>
@@ -293,12 +332,23 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                         </p>
                         {isAdmin && (
                           <div className="flex flex-wrap gap-2 mt-2">
-                            <ActivateBookButton bookId={book.id} clubId={id} scheduleWeeks={club.schedule_weeks} hasActiveBook={activeBooks.length > 0} />
-                            <BookActions bookId={book.id} bookStatus={book.status} isAdmin={isAdmin} clubId={id} />
+                            <ActivateBookButton
+                              bookId={book.id}
+                              clubId={id}
+                              scheduleWeeks={club.schedule_weeks}
+                              hasActiveBook={activeBooks.length > 0}
+                              bookTitle={isMystery ? 'this book' : book.title}
+                              isSecret={book.is_secret}
+                            />
+                            <BookActions bookId={book.id} bookTitle={book.title} bookStatus={book.status} isAdmin={isAdmin} clubId={id} />
                           </div>
                         )}
                       </div>
-                      {isUsersBook && <Stamp variant="ink" rotate={2} style={{ fontSize: 9 }}>Yours</Stamp>}
+                      {isUsersBook && book.is_secret
+                        ? <Stamp variant="ink" rotate={2} style={{ fontSize: 9 }}>Secret</Stamp>
+                        : isUsersBook
+                        ? <Stamp variant="ink" rotate={2} style={{ fontSize: 9 }}>Yours</Stamp>
+                        : null}
                     </div>
                   )
                 })}
@@ -352,19 +402,20 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                       })()}
                     </div>
                     <div className="flex flex-col items-end gap-1.5">
-                      {book.averageRating ? (
-                        <div className="flex items-center gap-1.5">
-                          <StarRating rating={book.averageRating} size={12} />
-                          <span className="label-mono">{book.averageRating.toFixed(1)}</span>
-                        </div>
-                      ) : null}
-                      <RatingButton bookId={book.id} currentUserRating={book.currentUserRating} averageRating={book.averageRating} totalRatings={book.totalRatings} />
+                      <RatingButton bookId={book.id} clubId={id} bookTitle={book.title} currentUserRating={book.currentUserRating} averageRating={book.averageRating} totalRatings={book.totalRatings} />
                     </div>
                   </div>
                 ))}
               </div>
             </section>
           )}
+          {/* Activity Feed */}
+          <section className="card p-7">
+            <p className="label-mono mb-1">Club log</p>
+            <h2 className="h-section text-xl sm:text-2xl mb-5 mt-0">Recent activity</h2>
+            <ActivityFeed events={events || []} />
+          </section>
+
         </div>
 
         {/* RIGHT COLUMN */}
