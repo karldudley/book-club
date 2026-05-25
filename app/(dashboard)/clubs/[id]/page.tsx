@@ -5,6 +5,8 @@ import BookActions from '@/components/clubs/BookActions'
 import ActivateBookButton from '@/components/clubs/ActivateBookButton'
 import ActivityFeed from '@/components/clubs/ActivityFeed'
 import ReadingProgress from '@/components/clubs/ReadingProgress'
+import ShareInviteButton from '@/components/clubs/ShareInviteButton'
+import RemoveMemberButton from '@/components/clubs/RemoveMemberButton'
 import RatingButton from '@/components/books/RatingButton'
 import { BookCover, Stamp, Avatar, SketchDivider } from '@/components/ui/dogear'
 import { formatReadingTime } from '@/lib/utils/readingTime'
@@ -152,7 +154,7 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                   {club.invite_code}
                 </span>
               </div>
-              <div className="w-px h-10 bg-ink-3 opacity-30" />
+              <div className="hidden sm:block w-px h-10 bg-ink-3 opacity-30" />
               <div>
                 <p className="label-mono mb-1">Cadence</p>
                 <span className="h-section text-xl">Every {club.schedule_weeks} weeks</span>
@@ -160,7 +162,12 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
             </div>
           </div>
           {isAdmin && (
-            <Stamp variant="brown" rotate={3} style={{ marginTop: 4 }}>You are admin</Stamp>
+            <div className="flex flex-col items-end gap-2">
+              <Stamp variant="brown" rotate={3}>You are admin</Stamp>
+              <Link href={`/clubs/${id}/settings`} className="btn btn-ghost btn-sm">
+                Settings →
+              </Link>
+            </div>
           )}
         </div>
       </div>
@@ -437,15 +444,14 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                       </div>
                     </div>
                   </div>
-                  {club.admin_id === m.profiles?.id && (
-                    <Stamp variant="brown" rotate={2} style={{ fontSize: 9 }}>Admin</Stamp>
-                  )}
+                  {club.admin_id === m.profiles?.id
+                    ? <Stamp variant="brown" rotate={2} style={{ fontSize: 9 }}>Admin</Stamp>
+                    : isAdmin && <RemoveMemberButton memberId={m.id} memberName={memberName(m)} />
+                  }
                 </div>
               ))}
             </div>
-            <button className="btn btn-paper btn-sm w-full mt-4">
-              Share invite code →
-            </button>
+            <ShareInviteButton inviteCode={club.invite_code} clubName={club.name} />
           </section>
 
           {/* Sticky note hint */}

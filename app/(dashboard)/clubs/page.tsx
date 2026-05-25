@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { BookCover, Stamp, SketchDivider } from '@/components/ui/dogear'
+import { BookCover, SketchDivider } from '@/components/ui/dogear'
 
 export default async function ClubsPage() {
   const supabase = await createClient()
@@ -28,6 +28,20 @@ export default async function ClubsPage() {
     .eq('user_id', user.id) as { data: any[] }
 
   const clubs = memberships?.map((m: any) => m.clubs).filter(Boolean) || []
+
+  const clubIds = clubs.map((c: any) => c.id)
+  const { data: activeBooks } = clubIds.length
+    ? await supabase
+        .from('club_books')
+        .select('club_id, cover_url, title')
+        .in('club_id', clubIds)
+        .eq('status', 'active')
+    : { data: [] }
+
+  const activeCoverByClub: Record<string, string | null> = {}
+  for (const book of activeBooks ?? []) {
+    activeCoverByClub[(book as any).club_id] = (book as any).cover_url ?? null
+  }
 
   return (
     <div>
@@ -65,42 +79,31 @@ export default async function ClubsPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {clubs.map((club: any) => (
             <Link
               key={club.id}
               href={`/clubs/${club.id}`}
-              className="card lift block"
-              style={{ padding: 22, textDecoration: 'none', color: 'inherit', position: 'relative', minHeight: 180 }}
+              className="card lift relative flex flex-col items-center gap-4 p-5 sm:p-6 no-underline text-inherit"
             >
-              {/* Admin tape decoration */}
               {club.admin_id === user.id && (
-                <div style={{ position: 'absolute', top: -10, right: 20, transform: 'rotate(6deg)', zIndex: 1 }}>
-                  <div
-                    className="tape"
-                    style={{ padding: '2px 16px', fontFamily: 'var(--font-jetbrains-mono)', fontSize: 8, fontWeight: 700, color: 'var(--ink)', letterSpacing: '0.18em', textTransform: 'uppercase', lineHeight: '20px' }}
-                  >
+                <div className="absolute -top-2.5 right-5 rotate-6 z-1">
+                  <div className="tape px-4 py-0.5 [font-family:var(--font-jetbrains-mono)] text-[8px] font-bold text-ink tracking-[0.18em] uppercase leading-5">
                     ADMIN
                   </div>
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-                <BookCover title={club.name} size="sm" />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <h3 className="h-section" style={{ fontSize: 20, margin: 0 }}>{club.name}</h3>
+              <div className="flex flex-col items-center gap-4 w-full">
+                <BookCover title={club.name} url={activeCoverByClub[club.id]} size="lg" />
+                <div className="w-full">
+                  <h3 className="h-section text-lg m-0 leading-snug">{club.name}</h3>
                   {club.description && (
-                    <p style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 6, lineHeight: 1.5 }}>
+                    <p className="text-[13px] text-ink-2 mt-1.5 leading-relaxed line-clamp-2">
                       {club.description}
                     </p>
                   )}
                 </div>
-              </div>
-
-              <div style={{ marginTop: 'auto', paddingTop: 16 }}>
-                {club.admin_id === user.id && (
-                  <Stamp variant="brown" rotate={-2}>Admin</Stamp>
-                )}
               </div>
             </Link>
           ))}

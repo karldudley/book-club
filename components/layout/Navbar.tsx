@@ -30,6 +30,7 @@ export default function Navbar() {
           <a href="/clubs" className="nav-link eyebrow">My Clubs</a>
           <a href="/join" className="nav-link eyebrow">Join Club</a>
           <div className="w-px h-5 mx-1.5 bg-ink-3 opacity-50" />
+          <a href="/settings" className="nav-link eyebrow">Settings</a>
           <button onClick={handleSignOut} className="btn btn-ghost btn-sm">
             Sign Out
           </button>
@@ -63,6 +64,7 @@ export default function Navbar() {
         <div className="md:hidden card absolute left-4 right-4 z-50 p-2 flex flex-col gap-1" style={{ top: 'calc(100% + 8px)' }}>
           <a href="/clubs" className="nav-link eyebrow block">My Clubs</a>
           <a href="/join" className="nav-link eyebrow block">Join Club</a>
+          <a href="/settings" className="nav-link eyebrow block">Settings</a>
           <div className="h-px bg-ink-3 opacity-30 my-1" />
           <button onClick={handleSignOut} className="btn btn-ghost btn-sm w-full justify-start">
             Sign Out

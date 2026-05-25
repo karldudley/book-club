@@ -31,13 +31,24 @@ CSS utility classes are in `app/globals.css`. Key ones:
 - **CSS layer gotcha**: globals.css classes are unlayered CSS and have higher cascade priority than Tailwind's `@layer utilities`. This means a Tailwind responsive utility like `md:hidden` will be overridden by a class that sets `display` (e.g. `.btn { display: inline-flex }`). Workaround: wrap the element in a plain `<div className="md:hidden">` instead of putting the responsive class on the element itself.
 - **Heading sizes**: `.h-display` and `.h-section` set font-family/weight/tracking but not size. Always pair with a Tailwind size, e.g. `className="h-display text-4xl sm:text-5xl"`. Use responsive sizes for large headings so they scale down on mobile.
 
+## Auth
+Passwordless magic link via Supabase `signInWithOtp`. No passwords — login and signup are the same form (both call `signInWithOtp`). The `mode` prop controls headline copy only.
+
+- `AuthForm` (`components/auth/AuthForm.tsx`) — collects email + optional display name, sends magic link, shows "Check your inbox" confirmation state
+- `app/auth/callback/route.ts` — exchanges the OTP `code` for a session; redirects new users (no `display_name` on profile) to `/settings`, returning users to `/clubs`
+- Session persistence: Supabase cookies managed by `lib/supabase/server.ts` + `proxy.ts` middleware. Increase refresh token expiry in Supabase dashboard (Authentication → Configuration → Sessions) to 30–90 days for "stay logged in" behaviour
+- Sign out (`scope: 'local'` default) logs out current device only
+
 ## Routes
 ```
-/login                        Auth
-/signup                       Auth
+/login                        Auth (magic link)
+/signup                       Auth (magic link — same flow, different headline)
+/auth/callback                Exchanges OTP code for session; redirects to /clubs or /settings
+/settings                     User profile — update display name
 /clubs                        List of user's clubs
 /clubs/new                    Create a club
 /clubs/[id]                   Club detail (now reading, suggestions, past reads, members, activity)
+/clubs/[id]/settings          Club settings — admin only (edit name/description/cadence, reset data)
 /clubs/[id]/search            Search Google Books + suggest a book
 /join                         Join a club via 6-char invite code
 ```
@@ -71,11 +82,14 @@ end;
 $$ language plpgsql security definer set search_path = public;
 ```
 
-**club_members policies** — the SELECT policy uses `is_club_member` (which is `security definer` and bypasses RLS internally, so no recursion):
+**club_members policies** — the SELECT policy uses `is_club_member` (which is `security definer` and bypasses RLS internally, so no recursion). The admin delete policy allows club admins to remove members:
 ```sql
 create policy "cm_select" on club_members for select using (public.is_club_member(club_id));
 create policy "cm_insert" on club_members for insert with check (user_id = auth.uid());
 create policy "cm_delete" on club_members for delete using (user_id = auth.uid());
+create policy "cm_admin_delete" on club_members for delete using (
+  exists (select 1 from public.clubs where clubs.id = club_members.club_id and clubs.admin_id = auth.uid())
+);
 ```
 
 **clubs policies** — use a `security definer` helper function for membership checks to avoid RLS recursion:
@@ -176,6 +190,29 @@ Shown on the active book card via `components/clubs/ReadingProgress.tsx` (client
 
 ## External APIs
 - **Google Books API** — key in `.env.local` as `GOOGLE_BOOKS_API_KEY`. Without a key it hits quota almost immediately. Route: `app/api/books/search/route.ts` → `lib/api/googleBooks.ts`. The `pageCount` field from `volumeInfo` is saved to `club_books.page_count` on suggestion.
+
+## Admin RPC functions
+
+**`reset_club(p_club_id uuid)`** — deletes all books, ratings, progress, and events for a club. Members are kept. Verifies `auth.uid()` is the club admin before deleting. Called from `ResetClubButton.tsx`.
+```sql
+create or replace function public.reset_club(p_club_id uuid)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not exists (select 1 from clubs where id = p_club_id and admin_id = auth.uid()) then
+    raise exception 'Not authorised';
+  end if;
+  delete from book_ratings where book_id in (select id from club_books where club_id = p_club_id);
+  delete from user_book_progress where club_book_id in (select id from club_books where club_id = p_club_id);
+  delete from club_books where club_id = p_club_id;
+  delete from club_events where club_id = p_club_id;
+end; $$;
+```
+
+## Admin UI
+
+- **Remove member** — `RemoveMemberButton.tsx` in the members list. Two-step confirm (click × → "Remove?" → Yes). Requires `cm_admin_delete` RLS policy above.
+- **Club settings** — `/clubs/[id]/settings` page with `EditClubForm.tsx` (name, description, cadence) and `ResetClubButton.tsx` (requires typing "RESET"). Linked from the "You are admin" stamp on the club detail page.
+- **Share invite** — `ShareInviteButton.tsx`: native share sheet on touch devices, clipboard copy on desktop.
 
 ## What's intentionally not implemented
 The DB schema doesn't support these features so they were skipped in the UI:

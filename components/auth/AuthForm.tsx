@@ -2,20 +2,19 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
 import { DogearLogo, SketchDivider } from '@/components/ui/dogear'
 
 type AuthFormProps = {
   mode: 'login' | 'signup'
+  initialError?: string
 }
 
-export default function AuthForm({ mode }: AuthFormProps) {
+export default function AuthForm({ mode, initialError }: AuthFormProps) {
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(initialError ?? null)
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
+  const [sent, setSent] = useState(false)
   const supabase = createClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,30 +23,16 @@ export default function AuthForm({ mode }: AuthFormProps) {
     setLoading(true)
 
     try {
-      if (mode === 'signup') {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              display_name: displayName,
-            },
-          },
-        })
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: displayName ? { display_name: displayName } : undefined,
+        },
+      })
 
-        if (error) throw error
-
-        router.push('/clubs')
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-
-        if (error) throw error
-
-        router.push('/clubs')
-      }
+      if (error) throw error
+      setSent(true)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -55,9 +40,40 @@ export default function AuthForm({ mode }: AuthFormProps) {
     }
   }
 
+  if (sent) {
+    return (
+      <div className="card" style={{ overflow: 'hidden' }}>
+        <div className="px-6 sm:px-10 pt-8 sm:pt-9 pb-7 text-center">
+          <DogearLogo />
+          <div style={{ marginTop: 28 }}>
+            <p className="eyebrow" style={{ marginBottom: 10 }}>— Check your inbox</p>
+            <h1 className="h-display" style={{ fontSize: 32, margin: 0 }}>
+              Magic link on its way.
+            </h1>
+            <p className="text-ink-2" style={{ marginTop: 16, fontSize: 14, lineHeight: 1.6 }}>
+              We sent a login link to <strong>{email}</strong>.<br />
+              Click it to continue — no password needed.
+            </p>
+          </div>
+        </div>
+        <div
+          className="px-6 sm:px-10 py-5 text-center text-ink-2"
+          style={{ borderTop: '1px dashed var(--ink-3)', background: 'var(--paper-2)', fontSize: 13 }}
+        >
+          Didn&apos;t get it?{' '}
+          <button
+            onClick={() => setSent(false)}
+            style={{ color: 'var(--brown)', fontWeight: 600, textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', padding: 0, font: 'inherit' }}
+          >
+            Try again →
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="card" style={{ overflow: 'hidden' }}>
-      {/* Main form area */}
       <div className="px-6 sm:px-10 pt-8 sm:pt-9 pb-7">
         <DogearLogo />
 
@@ -65,10 +81,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
           <p className="eyebrow" style={{ marginBottom: 10 }}>
             {mode === 'login' ? '— Welcome back, friend' : '— A book club for slow readers'}
           </p>
-          <h1
-            className="h-display"
-            style={{ fontSize: 36, margin: 0 }}
-          >
+          <h1 className="h-display" style={{ fontSize: 36, margin: 0 }}>
             {mode === 'login' ? (
               <>Pick up <span className="sketch-underline">where you</span> left off.</>
             ) : (
@@ -78,22 +91,19 @@ export default function AuthForm({ mode }: AuthFormProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-7">
-          {mode === 'signup' && (
-            <div>
-              <label htmlFor="displayName" className="field-label">
-                Your Name
-              </label>
-              <input
-                id="displayName"
-                type="text"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                required
-                className="field"
-                placeholder="Jane Doe"
-              />
-            </div>
-          )}
+          <div>
+            <label htmlFor="displayName" className="field-label">
+              Your Name <span style={{ color: 'var(--ink-3)', fontWeight: 400 }}>(new members)</span>
+            </label>
+            <input
+              id="displayName"
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              className="field"
+              placeholder="Jane Doe"
+            />
+          </div>
 
           <div>
             <label htmlFor="email" className="field-label">
@@ -107,22 +117,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
               required
               className="field"
               placeholder="you@example.com"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="password" className="field-label">
-              {mode === 'login' ? 'Password' : 'Password (6+)'}
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className="field"
-              placeholder="••••••••"
             />
           </div>
 
@@ -149,41 +143,26 @@ export default function AuthForm({ mode }: AuthFormProps) {
             className="btn btn-primary"
             style={{ marginTop: 4, height: 48, width: '100%', fontSize: 15 }}
           >
-            {loading
-              ? 'Loading…'
-              : mode === 'login'
-              ? 'Sign in'
-              : 'Make my shelf'}
+            {loading ? 'Sending…' : 'Send magic link →'}
           </button>
         </form>
       </div>
 
-      {/* Footer */}
       <div
         className="px-6 sm:px-10 py-5 text-center text-ink-2"
-        style={{
-          borderTop: '1px dashed var(--ink-3)',
-          background: 'var(--paper-2)',
-          fontSize: 13,
-        }}
+        style={{ borderTop: '1px dashed var(--ink-3)', background: 'var(--paper-2)', fontSize: 13 }}
       >
         {mode === 'login' ? (
           <>
             New to Dogear?{' '}
-            <a
-              href="/signup"
-              style={{ color: 'var(--brown)', fontWeight: 600, textDecoration: 'underline' }}
-            >
+            <a href="/signup" style={{ color: 'var(--brown)', fontWeight: 600, textDecoration: 'underline' }}>
               Start a shelf →
             </a>
           </>
         ) : (
           <>
             Already have one?{' '}
-            <a
-              href="/login"
-              style={{ color: 'var(--brown)', fontWeight: 600, textDecoration: 'underline' }}
-            >
+            <a href="/login" style={{ color: 'var(--brown)', fontWeight: 600, textDecoration: 'underline' }}>
               Sign in →
             </a>
           </>
