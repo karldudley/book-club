@@ -210,7 +210,7 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                           by {book.author}
                         </p>
                       )}
-                      {book.page_count && (() => {
+                      {book.page_count > 0 && (() => {
                         const { read, listen } = formatReadingTime(book.page_count)
                         return (
                           <p className="label-mono mt-2">
@@ -325,7 +325,7 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                         {!isMystery && book.author && (
                           <div className="text-ink-2" style={{ fontSize: 13 }}>{book.author}</div>
                         )}
-                        {!isMystery && book.page_count && (() => {
+                        {!isMystery && book.page_count > 0 && (() => {
                           const { read, listen } = formatReadingTime(book.page_count)
                           return (
                             <p className="label-mono mt-1" style={{ fontSize: 9 }}>
@@ -403,7 +403,7 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                     <div>
                       <div style={{ fontFamily: 'var(--font-roboto-slab)', fontWeight: 700, fontSize: 15 }}>{book.title}</div>
                       {book.author && <div className="text-ink-2" style={{ fontSize: 12 }}>{book.author}</div>}
-                      {book.page_count && (() => {
+                      {book.page_count > 0 && (() => {
                         const { read } = formatReadingTime(book.page_count)
                         return <p className="label-mono mt-0.5" style={{ fontSize: 9 }}>⏱ {read}</p>
                       })()}

@@ -155,8 +155,8 @@ export default function SearchPage({ params }: { params: Promise<{ id: string }>
                   {selectedBook.volumeInfo.pageCount ? ` · ${selectedBook.volumeInfo.pageCount} pp` : ''}
                 </p>
               )}
-              {selectedBook.volumeInfo.pageCount && (() => {
-                const { read, listen } = formatReadingTime(selectedBook.volumeInfo.pageCount)
+              {(selectedBook.volumeInfo.pageCount ?? 0) > 0 && (() => {
+                const { read, listen } = formatReadingTime(selectedBook.volumeInfo.pageCount!)
                 return (
                   <p className="label-mono" style={{ marginTop: 8 }}>
                     ⏱ {read} read · 🎧 {listen} listen
