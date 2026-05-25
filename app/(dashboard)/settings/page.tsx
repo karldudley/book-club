@@ -9,9 +9,9 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('display_name')
+    .select('*')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
   return (
     <div className="max-w-lg mx-auto px-4 py-10 sm:py-14">

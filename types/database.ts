@@ -8,6 +8,9 @@ export type Json =
 
 export interface Database {
   public: {
+    Views: Record<never, never>
+    Functions: Record<never, never>
+    CompositeTypes: Record<never, never>
     Tables: {
       profiles: {
         Row: {
@@ -31,6 +34,7 @@ export interface Database {
           avatar_url?: string | null
           created_at?: string
         }
+        Relationships: []
       }
       clubs: {
         Row: {
@@ -63,6 +67,7 @@ export interface Database {
           schedule_weeks?: number
           created_at?: string
         }
+        Relationships: []
       }
       club_members: {
         Row: {
@@ -86,6 +91,7 @@ export interface Database {
           joined_at?: string
           turn_order?: number | null
         }
+        Relationships: []
       }
       club_books: {
         Row: {
@@ -133,6 +139,7 @@ export interface Database {
           deadline?: string | null
           created_at?: string
         }
+        Relationships: []
       }
       club_events: {
         Row: {
@@ -162,6 +169,31 @@ export interface Database {
           payload?: Record<string, unknown>
           created_at?: string
         }
+        Relationships: []
+      }
+      book_ratings: {
+        Row: {
+          id: string
+          book_id: string
+          user_id: string
+          rating: number
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          book_id: string
+          user_id: string
+          rating: number
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          book_id?: string
+          user_id?: string
+          rating?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_book_progress: {
         Row: {
@@ -191,6 +223,7 @@ export interface Database {
           completed_at?: string | null
           rating?: number | null
         }
+        Relationships: []
       }
     }
   }
