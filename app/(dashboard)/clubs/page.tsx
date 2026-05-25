@@ -38,6 +38,25 @@ export default async function ClubsPage() {
         .eq('status', 'active')
     : { data: [] }
 
+  const { data: completedBooks } = clubIds.length
+    ? await supabase
+        .from('club_books')
+        .select('club_id, cover_url, created_at')
+        .in('club_id', clubIds)
+        .eq('status', 'completed')
+        .not('cover_url', 'is', null)
+        .order('created_at', { ascending: false })
+    : { data: [] }
+
+  // Last completed cover per club (for fallback when no active book)
+  const lastCompletedCoverByClub: Record<string, string | null> = {}
+  for (const book of completedBooks ?? []) {
+    const b = book as any
+    if (!lastCompletedCoverByClub[b.club_id]) {
+      lastCompletedCoverByClub[b.club_id] = b.cover_url
+    }
+  }
+
   const activeCoverByClub: Record<string, string | null> = {}
   for (const book of activeBooks ?? []) {
     activeCoverByClub[(book as any).club_id] = (book as any).cover_url ?? null
@@ -95,7 +114,7 @@ export default async function ClubsPage() {
               )}
 
               <div className="flex flex-col items-center gap-4 w-full">
-                <BookCover title={club.name} url={activeCoverByClub[club.id]} size="lg" />
+                <BookCover title={club.name} url={activeCoverByClub[club.id] ?? lastCompletedCoverByClub[club.id]} size="lg" />
                 <div className="w-full">
                   <h3 className="h-section text-lg m-0 leading-snug">{club.name}</h3>
                   {club.description && (
