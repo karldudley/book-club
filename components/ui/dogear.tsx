@@ -21,12 +21,11 @@ export function DogearLogo({ className }: { className?: string }) {
           fontFamily: 'var(--font-roboto-slab), Georgia, serif',
           fontWeight: 800,
           fontSize: '1.2rem',
-          color: 'var(--ink)',
           letterSpacing: '-0.02em',
           lineHeight: 1,
         }}
       >
-        Dogear
+        <span style={{ color: 'var(--ink)' }}>Dog</span><span style={{ color: 'var(--terracotta)' }}>ear</span>
       </span>
     </a>
   )
