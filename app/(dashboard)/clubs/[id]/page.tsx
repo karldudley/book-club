@@ -10,6 +10,7 @@ import RemoveMemberButton from '@/components/clubs/RemoveMemberButton'
 import RatingButton from '@/components/books/RatingButton'
 import { BookCover, Stamp, Avatar, SketchDivider } from '@/components/ui/dogear'
 import { formatReadingTime } from '@/lib/utils/readingTime'
+import { truncateTitle } from '@/lib/utils/truncateTitle'
 
 export default async function ClubPage({ params }: { params: { id: string } }) {
   const supabase = await createClient()
@@ -204,7 +205,7 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                   <div className="flex gap-4 sm:gap-6 items-start">
                     <BookCover url={book.cover_url} title={book.title} author={book.author} size="lg" />
                     <div className="flex-1 min-w-0">
-                      <h2 className="h-display text-2xl sm:text-3xl m-0 leading-tight">{book.title}</h2>
+                      <h2 className="h-display text-2xl sm:text-3xl m-0 leading-tight">{truncateTitle(book.title)}</h2>
                       {book.author && (
                         <p className="text-ink-2 mt-1" style={{ fontFamily: 'var(--font-roboto-slab)', fontStyle: 'italic', fontSize: 16 }}>
                           by {book.author}
@@ -320,7 +321,7 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                       )}
                       <div className="flex-1 min-w-0">
                         <div style={{ fontFamily: 'var(--font-roboto-slab)', fontWeight: 700, fontSize: 16 }}>
-                          {isMystery ? 'Secret suggestion' : book.title}
+                          {isMystery ? 'Secret suggestion' : truncateTitle(book.title)}
                         </div>
                         {!isMystery && book.author && (
                           <div className="text-ink-2" style={{ fontSize: 13 }}>{book.author}</div>
@@ -401,7 +402,7 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                   >
                     <BookCover url={book.cover_url} title={book.title} size="sm" />
                     <div>
-                      <div style={{ fontFamily: 'var(--font-roboto-slab)', fontWeight: 700, fontSize: 15 }}>{book.title}</div>
+                      <div style={{ fontFamily: 'var(--font-roboto-slab)', fontWeight: 700, fontSize: 15 }}>{truncateTitle(book.title)}</div>
                       {book.author && <div className="text-ink-2" style={{ fontSize: 12 }}>{book.author}</div>}
                       {book.page_count > 0 && (() => {
                         const { read } = formatReadingTime(book.page_count)

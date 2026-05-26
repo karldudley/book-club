@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { GoogleBook } from '@/lib/api/googleBooks'
 import { BookCover, Stamp } from '@/components/ui/dogear'
+import { truncateTitle } from '@/lib/utils/truncateTitle'
 
 interface BookSearchProps {
   onSelectBook: (book: GoogleBook) => void
@@ -143,7 +144,7 @@ export default function BookSearch({ onSelectBook, selectedBookId }: BookSearchP
                             lineHeight: 1.2,
                           }}
                         >
-                          {book.volumeInfo.title}
+                          {truncateTitle(book.volumeInfo.title)}
                         </div>
                         {book.volumeInfo.authors && (
                           <div

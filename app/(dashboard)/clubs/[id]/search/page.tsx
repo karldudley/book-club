@@ -6,6 +6,7 @@ import Link from 'next/link'
 import BookSearch from '@/components/books/BookSearch'
 import { GoogleBook } from '@/lib/api/googleBooks'
 import { formatReadingTime } from '@/lib/utils/readingTime'
+import { truncateTitle } from '@/lib/utils/truncateTitle'
 import { createClient } from '@/lib/supabase/client'
 import { use } from 'react'
 import { BookCover, Stamp } from '@/components/ui/dogear'
@@ -142,7 +143,7 @@ export default function SearchPage({ params }: { params: Promise<{ id: string }>
               <h3
                 style={{ fontFamily: 'var(--font-roboto-slab)', fontWeight: 700, fontSize: 22, margin: 0, lineHeight: 1.1 }}
               >
-                {selectedBook.volumeInfo.title}
+                {truncateTitle(selectedBook.volumeInfo.title)}
               </h3>
               {selectedBook.volumeInfo.authors && (
                 <p style={{ fontFamily: 'var(--font-roboto-slab)', fontStyle: 'italic', fontSize: 15, color: 'var(--ink-2)', marginTop: 4 }}>
