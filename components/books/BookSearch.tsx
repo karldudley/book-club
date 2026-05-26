@@ -103,11 +103,11 @@ export default function BookSearch({ onSelectBook, selectedBookId }: BookSearchP
       {results.length > 0 && (
         <>
           <p className="label-mono" style={{ marginTop: 24, marginBottom: 14 }}>
-            {results.filter((b) => b.volumeInfo?.imageLinks?.thumbnail).length} results
+            {results.filter((b) => b.volumeInfo?.title).length} results
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {results
-              .filter((book) => book.volumeInfo?.title && book.volumeInfo?.imageLinks?.thumbnail)
+              .filter((book) => book.volumeInfo?.title)
               .map((book) => {
                 const isSelected = book.id === selectedBookId
                 return (
