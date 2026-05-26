@@ -44,20 +44,13 @@ function detectAuthorQuery(query: string): { author: string; title: string } | n
 }
 
 /**
- * Wraps a value in quotes if it contains spaces.
- */
-function q(value: string): string {
-  return value.includes(' ') ? `"${value}"` : value
-}
-
-/**
  * Converts a raw user query into an optimised Google Books API query.
  *
  * Rules (in priority order):
  * 1. Already has operators → return as-is
  * 2. ISBN → isbn:XXXXXXXXXX
- * 3. "title by author" → intitle:"title" inauthor:"author"
- * 4. Everything else → intitle:"query" (quoted phrase, works for 1 or more words)
+ * 3. "title by author" → intitle:title inauthor:author
+ * 4. Everything else → intitle:query
  */
 export function parseSearchQuery(query: string): string {
   const trimmed = query.trim()
@@ -68,9 +61,9 @@ export function parseSearchQuery(query: string): string {
   const authorQuery = detectAuthorQuery(trimmed)
   if (authorQuery) {
     const { title, author } = authorQuery
-    if (title && author) return `intitle:${q(title)} inauthor:${q(author)}`
-    if (author) return `inauthor:${q(author)}`
+    if (title && author) return `intitle:${title} inauthor:${author}`
+    if (author) return `inauthor:${author}`
   }
 
-  return `intitle:${q(trimmed)}`
+  return `intitle:${trimmed}`
 }
