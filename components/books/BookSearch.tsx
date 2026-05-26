@@ -165,6 +165,11 @@ export default function BookSearch({ onSelectBook, selectedBookId }: BookSearchP
                             {book.volumeInfo.pageCount ? ` · ${book.volumeInfo.pageCount} pp` : ''}
                           </p>
                         )}
+                        {book.volumeInfo.printType && (
+                          <p style={{ marginTop: 4, fontSize: 10, fontFamily: 'var(--font-jetbrains-mono)', color: 'var(--ink-3)', letterSpacing: '0.06em' }}>
+                            {book.volumeInfo.printType}
+                          </p>
+                        )}
                       </div>
                     </div>
 
