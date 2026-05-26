@@ -214,6 +214,39 @@ end; $$;
 - **Club settings** — `/clubs/[id]/settings` page with `EditClubForm.tsx` (name, description, cadence) and `ResetClubButton.tsx` (requires typing "RESET"). Linked from the "You are admin" stamp on the club detail page.
 - **Share invite** — `ShareInviteButton.tsx`: native share sheet on touch devices, clipboard copy on desktop.
 
+## Versioning & deployment
+
+**Platform:** Vercel (project: `karl-dudleys-projects/book-club`)
+**Production URL:** https://dogearclub.vercel.app
+
+GitHub (`karldudley/book-club`) is connected to Vercel — **no separate deploy step needed**:
+- Push to `main` → automatic production deploy
+- Open a PR → automatic preview deploy (unique URL)
+
+### Check recent deployments
+```bash
+vercel ls
+```
+
+### Rollback to a previous deployment
+```bash
+vercel rollback          # rolls back to previous production deploy
+```
+
+### Environment variables
+Managed in the Vercel dashboard (not committed). Required vars:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `GOOGLE_BOOKS_API_KEY`
+
+Local dev: copy these into `.env.local` (gitignored).
+
+### Versioning
+No formal semver — deploy straight from `main`. The `package.json` version (`0.1.0`) is not incremented per release.
+
+## Commit messages
+Keep messages short (max 20 words). Do not mention Claude, Claude Code, or any AI agent in commit messages.
+
 ## What's intentionally not implemented
 The DB schema doesn't support these features so they were skipped in the UI:
 - Upvote counts on suggestions (no votes table)
