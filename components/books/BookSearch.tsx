@@ -16,6 +16,7 @@ export default function BookSearch({ onSelectBook, selectedBookId }: BookSearchP
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [lastQuery, setLastQuery] = useState('')
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,6 +25,7 @@ export default function BookSearch({ onSelectBook, selectedBookId }: BookSearchP
     setLoading(true)
     setSearched(true)
     setError(null)
+    setLastQuery(query.trim())
 
     try {
       const response = await fetch(`/api/books/search?q=${encodeURIComponent(query)}`)
@@ -44,6 +46,16 @@ export default function BookSearch({ onSelectBook, selectedBookId }: BookSearchP
       setLoading(false)
     }
   }
+
+  const visibleResults = results.filter((book) => book.volumeInfo?.title)
+
+  // A one- or two-word query against a common word (e.g. "Drone") buries
+  // anything obscure under hundreds of Google Books matches. Nudge rather than
+  // pretend the top results are the right ones.
+  const isBroadQuery =
+    lastQuery.split(/\s+/).filter(Boolean).length <= 2 && visibleResults.length >= 15
+
+  const hintStyle = { marginTop: 6, marginBottom: 14, color: 'var(--ink-3)' }
 
   return (
     <div>
@@ -94,111 +106,119 @@ export default function BookSearch({ onSelectBook, selectedBookId }: BookSearchP
         </div>
       )}
 
-      {searched && results.length === 0 && !loading && !error && (
-        <p className="eyebrow" style={{ textAlign: 'center', padding: '32px 0', color: 'var(--ink-3)' }}>
-          No books found — try a different search
-        </p>
+      {searched && visibleResults.length === 0 && !loading && !error && (
+        <div style={{ textAlign: 'center', padding: '32px 0' }}>
+          <p className="eyebrow" style={{ color: 'var(--ink-3)' }}>
+            No books found — try a different search
+          </p>
+          <p className="eyebrow" style={hintStyle}>
+            Try the full title with the author, like “Drone by Dan Howarth”
+          </p>
+        </div>
       )}
 
-      {results.length > 0 && (
+      {visibleResults.length > 0 && (
         <>
-          <p className="label-mono" style={{ marginTop: 24, marginBottom: 14 }}>
-            {results.filter((b) => b.volumeInfo?.title).length} results
+          <p className="label-mono" style={{ marginTop: 24, marginBottom: isBroadQuery ? 0 : 14 }}>
+            {visibleResults.length} results
           </p>
+          {isBroadQuery && (
+            <p className="eyebrow" style={hintStyle}>
+              Lots of matches — add the author to narrow it down, like “Drone by Dan Howarth”
+            </p>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {results
-              .filter((book) => book.volumeInfo?.title)
-              .map((book) => {
-                const isSelected = book.id === selectedBookId
-                return (
-                  <div
-                    key={book.id}
-                    className="card lift"
-                    style={{
-                      padding: 18,
-                      background: isSelected ? 'var(--paper-2)' : 'var(--paper)',
-                      boxShadow: isSelected ? '4px 4px 0 var(--brown)' : '4px 4px 0 var(--ink)',
-                      position: 'relative',
-                      cursor: 'pointer',
-                    }}
-                    onClick={() => onSelectBook(book)}
-                  >
-                    {isSelected && (
-                      <div style={{ position: 'absolute', top: 10, right: 10 }}>
-                        <Stamp variant="brown" rotate={-3} style={{ fontSize: 9 }}>Selected</Stamp>
-                      </div>
-                    )}
+            {visibleResults.map((book) => {
+              const isSelected = book.id === selectedBookId
+              return (
+                <div
+                  key={book.id}
+                  className="card lift"
+                  style={{
+                    padding: 18,
+                    background: isSelected ? 'var(--paper-2)' : 'var(--paper)',
+                    boxShadow: isSelected ? '4px 4px 0 var(--brown)' : '4px 4px 0 var(--ink)',
+                    position: 'relative',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => onSelectBook(book)}
+                >
+                  {isSelected && (
+                    <div style={{ position: 'absolute', top: 10, right: 10 }}>
+                      <Stamp variant="brown" rotate={-3} style={{ fontSize: 9 }}>Selected</Stamp>
+                    </div>
+                  )}
 
-                    <div style={{ display: 'flex', gap: 14, marginBottom: 12 }}>
-                      <BookCover
-                        url={book.volumeInfo.imageLinks?.thumbnail}
-                        title={book.volumeInfo.title}
-                        size="md"
-                      />
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', gap: 14, marginBottom: 12 }}>
+                    <BookCover
+                      url={book.volumeInfo.imageLinks?.thumbnail}
+                      title={book.volumeInfo.title}
+                      size="md"
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontFamily: 'var(--font-roboto-slab)',
+                          fontWeight: 700,
+                          fontSize: 17,
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {truncateTitle(book.volumeInfo.title)}
+                      </div>
+                      {book.volumeInfo.authors && (
                         <div
                           style={{
                             fontFamily: 'var(--font-roboto-slab)',
-                            fontWeight: 700,
-                            fontSize: 17,
-                            lineHeight: 1.2,
+                            fontStyle: 'italic',
+                            fontSize: 13,
+                            color: 'var(--ink-2)',
+                            marginTop: 3,
                           }}
                         >
-                          {truncateTitle(book.volumeInfo.title)}
+                          {book.volumeInfo.authors.join(', ')}
                         </div>
-                        {book.volumeInfo.authors && (
-                          <div
-                            style={{
-                              fontFamily: 'var(--font-roboto-slab)',
-                              fontStyle: 'italic',
-                              fontSize: 13,
-                              color: 'var(--ink-2)',
-                              marginTop: 3,
-                            }}
-                          >
-                            {book.volumeInfo.authors.join(', ')}
-                          </div>
-                        )}
-                        {book.volumeInfo.publishedDate && (
-                          <p className="eyebrow" style={{ marginTop: 6 }}>
-                            {book.volumeInfo.publishedDate.slice(0, 4)}
-                            {book.volumeInfo.pageCount ? ` · ${book.volumeInfo.pageCount} pp` : ''}
-                          </p>
-                        )}
-                      </div>
+                      )}
+                      {book.volumeInfo.publishedDate && (
+                        <p className="eyebrow" style={{ marginTop: 6 }}>
+                          {book.volumeInfo.publishedDate.slice(0, 4)}
+                          {book.volumeInfo.pageCount ? ` · ${book.volumeInfo.pageCount} pp` : ''}
+                        </p>
+                      )}
                     </div>
+                  </div>
 
-                    {book.volumeInfo.description && (
-                      <p
-                        style={{
-                          fontSize: 12.5,
-                          color: 'var(--ink-2)',
-                          lineHeight: 1.5,
-                          fontStyle: 'italic',
-                          marginBottom: 12,
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        "{book.volumeInfo.description}"
-                      </p>
-                    )}
-
-                    <button
-                      className={`btn btn-sm ${isSelected ? 'btn-primary' : 'btn-paper'}`}
-                      style={{ alignSelf: 'flex-start' }}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onSelectBook(book)
+                  {book.volumeInfo.description && (
+                    <p
+                      style={{
+                        fontSize: 12.5,
+                        color: 'var(--ink-2)',
+                        lineHeight: 1.5,
+                        fontStyle: 'italic',
+                        marginBottom: 12,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
                       }}
                     >
-                      {isSelected ? '✓ Suggesting this' : 'Suggest this →'}
-                    </button>
-                  </div>
-                )
-              })}
+                      "{book.volumeInfo.description}"
+                    </p>
+                  )}
+
+                  <button
+                    className={`btn btn-sm ${isSelected ? 'btn-primary' : 'btn-paper'}`}
+                    style={{ alignSelf: 'flex-start' }}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onSelectBook(book)
+                    }}
+                  >
+                    {isSelected ? '✓ Suggesting this' : 'Suggest this →'}
+                  </button>
+                </div>
+              )
+            })}
           </div>
         </>
       )}

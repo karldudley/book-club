@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     // Parse error to provide helpful messages
     const errorMessage = error?.message || 'Unknown error'
+    console.error('Book search failed:', query, error)
 
     // Check for specific error types
     if (errorMessage.includes('fetch failed') || errorMessage.includes('network')) {
