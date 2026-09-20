@@ -8,6 +8,7 @@ import ReadingProgress from '@/components/clubs/ReadingProgress'
 import ShareInviteButton from '@/components/clubs/ShareInviteButton'
 import RemoveMemberButton from '@/components/clubs/RemoveMemberButton'
 import RatingButton from '@/components/books/RatingButton'
+import LinkPending from '@/components/ui/LinkPending'
 import { BookCover, Stamp, Avatar, SketchDivider } from '@/components/ui/dogear'
 import { formatReadingTime } from '@/lib/utils/readingTime'
 import { truncateTitle } from '@/lib/utils/truncateTitle'
@@ -214,12 +215,11 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                       <BookCover url={book.cover_url} title={book.title} author={book.author} size="lg" />
                     </Link>
                     <div className="flex-1 min-w-0">
-                      <Link
-                        href={`/clubs/${id}/books/${book.id}`}
-                        className="no-underline"
-                        style={{ color: 'inherit' }}
-                      >
-                        <h2 className="h-display text-2xl sm:text-3xl m-0 leading-tight">{truncateTitle(book.title)}</h2>
+                      <Link href={`/clubs/${id}/books/${book.id}`} className="row-link">
+                        <h2 className="h-display text-2xl sm:text-3xl m-0 leading-tight row-link-title">
+                          {truncateTitle(book.title)}
+                        </h2>
+                        <LinkPending size={18} />
                       </Link>
                       {book.author && (
                         <p className="text-ink-2 mt-1" style={{ fontFamily: 'var(--font-roboto-slab)', fontStyle: 'italic', fontSize: 16 }}>
@@ -341,14 +341,14 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                             Secret suggestion
                           </div>
                         ) : (
-                          <Link
-                            href={`/clubs/${id}/books/${book.id}`}
-                            className="no-underline"
-                            style={{ color: 'inherit' }}
-                          >
-                            <div style={{ fontFamily: 'var(--font-roboto-slab)', fontWeight: 700, fontSize: 16 }}>
+                          <Link href={`/clubs/${id}/books/${book.id}`} className="row-link">
+                            <div
+                              className="row-link-title"
+                              style={{ fontFamily: 'var(--font-roboto-slab)', fontWeight: 700, fontSize: 16 }}
+                            >
                               {truncateTitle(book.title)}
                             </div>
+                            <LinkPending size={13} />
                           </Link>
                         )}
                         {!isMystery && book.author && (
@@ -417,33 +417,38 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
               <p className="label-mono mb-1">
                 The bookshelf · {completedBooks.length} read{completedBooks.length !== 1 ? 's' : ''}
               </p>
-              <h2 className="h-section text-xl sm:text-2xl mb-5 mt-0">Past reads</h2>
+              <h2 className="h-section text-xl sm:text-2xl mb-1 mt-0">Past reads</h2>
+              <p className="text-ink-3 mb-4" style={{ fontSize: 12, fontStyle: 'italic' }}>
+                Tap a book for the blurb and everyone&apos;s ratings →
+              </p>
               <div>
                 {completedBooks.map((book: any, i: number) => (
                   <div
                     key={book.id}
-                    className="grid gap-3 sm:gap-4 items-center py-3"
+                    className="flex gap-3 sm:gap-4 items-center py-3"
                     style={{
-                      gridTemplateColumns: 'auto 1fr auto',
                       borderBottom: i < completedBooks.length - 1 ? '1px dashed var(--ink-3)' : 'none',
                     }}
                   >
-                    <Link href={`/clubs/${id}/books/${book.id}`} style={{ display: 'block' }}>
+                    {/* One link target for the whole row; the rating button stays outside it. */}
+                    <Link href={`/clubs/${id}/books/${book.id}`} className="row-link">
                       <BookCover url={book.cover_url} title={book.title} size="sm" />
+                      <div className="flex-1 min-w-0">
+                        <div
+                          className="row-link-title"
+                          style={{ fontFamily: 'var(--font-roboto-slab)', fontWeight: 700, fontSize: 15 }}
+                        >
+                          {truncateTitle(book.title)}
+                        </div>
+                        {book.author && <div className="text-ink-2" style={{ fontSize: 12 }}>{book.author}</div>}
+                        {book.page_count > 0 && (() => {
+                          const { read } = formatReadingTime(book.page_count)
+                          return <p className="label-mono mt-0.5" style={{ fontSize: 9 }}>⏱ {read}</p>
+                        })()}
+                      </div>
+                      <LinkPending />
                     </Link>
-                    <Link
-                      href={`/clubs/${id}/books/${book.id}`}
-                      className="no-underline"
-                      style={{ color: 'inherit' }}
-                    >
-                      <div style={{ fontFamily: 'var(--font-roboto-slab)', fontWeight: 700, fontSize: 15 }}>{truncateTitle(book.title)}</div>
-                      {book.author && <div className="text-ink-2" style={{ fontSize: 12 }}>{book.author}</div>}
-                      {book.page_count > 0 && (() => {
-                        const { read } = formatReadingTime(book.page_count)
-                        return <p className="label-mono mt-0.5" style={{ fontSize: 9 }}>⏱ {read}</p>
-                      })()}
-                    </Link>
-                    <div className="flex flex-col items-end gap-1.5">
+                    <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
                       <RatingButton bookId={book.id} clubId={id} bookTitle={book.title} currentUserRating={book.currentUserRating} averageRating={book.averageRating} totalRatings={book.totalRatings} />
                     </div>
                   </div>

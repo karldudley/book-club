@@ -25,6 +25,8 @@ CSS utility classes are in `app/globals.css`. Key ones:
 - `.sketch-underline` — wavy terracotta underline via SVG background-image
 - `.kraft-bg`, `.paper-bg` — background fills
 - `.nav-link` — navigation anchor with hover state (replaces JS onMouseEnter/onMouseLeave)
+- `.row-link` + `.row-link-title` — a whole row that navigates. Hover/focus tints the row and underlines the title in terracotta; pair with `<LinkPending />` for the chevron. Keep interactive controls (e.g. `RatingButton`) **outside** the `<Link>`, or the row swallows their clicks.
+- `.skeleton-line`, `.skeleton-block` — shimmer placeholders for `loading.tsx`; wrap the page in `.skeleton-page` to make it inert.
 
 ## Styling conventions
 - **Tailwind-first for layout**: use Tailwind utilities for all flex, grid, gap, padding, margin, sizing. Responsive prefixes: `sm:` (640px), `md:` (768px), `lg:` (1024px).
@@ -289,6 +291,11 @@ Keep messages short (max 20 words). Do not mention Claude, Claude Code, or any A
 `/clubs/[id]/books/[bookId]` — reached from past reads, the active book title/cover, and non-secret suggestion rows on the club page. **Mystery cards are deliberately not linked**, so the detail route can't be used as a peephole.
 
 Two layers guard it: the `cb_select` RLS policy (a guessed URL for someone else's secret suggestion returns no row → `notFound()`), plus an explicit `book.club_id !== id` check so a valid book id from another club can't render under this club's header. Keep both if you touch this page.
+
+## Navigation feedback
+`components/ui/LinkPending.tsx` (`'use client'`) uses Next 16's `useLinkStatus()` from `next/link`, which reads the pending state of the **nearest enclosing `<Link>`** — so it must be rendered as a child of one, and the surrounding page can stay a server component. It shows a chevron at rest and a spinner while navigating, in the same box so rows don't reflow.
+
+Both `/clubs/[id]/books/[bookId]` and `/clubs/[id]/stats` have a `loading.tsx` skeleton. The book page's matters most: it may call `getVolume()` to backfill a missing description, so it can be on screen for a moment.
 
 ## League table
 `/clubs/[id]/stats` — linked from the club header for **all** members, not just admins. Rankings, club totals, a `Bookshelf` of finished reads, member awards, and a full member table. All maths lives in `lib/utils/clubStats.ts` (see Utilities).

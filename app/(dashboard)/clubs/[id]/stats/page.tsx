@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { SketchDivider, StatTile, Bookshelf, StarRating, Avatar } from '@/components/ui/dogear'
+import LinkPending from '@/components/ui/LinkPending'
 import { formatReadingTime } from '@/lib/utils/readingTime'
 import { truncateTitle } from '@/lib/utils/truncateTitle'
 import {
@@ -48,15 +49,8 @@ function BookRankRow({
   last: boolean
 }) {
   return (
-    <Link
-      href={`/clubs/${clubId}/books/${stat.id}`}
-      className="no-underline"
-      style={{ color: 'inherit', display: 'block' }}
-    >
-      <div
-        className="flex items-center gap-3 py-2.5"
-        style={{ borderBottom: last ? 'none' : '1px dashed var(--ink-3)' }}
-      >
+    <div style={{ borderBottom: last ? 'none' : '1px dashed var(--ink-3)' }}>
+      <Link href={`/clubs/${clubId}/books/${stat.id}`} className="row-link" style={{ margin: '4px -10px' }}>
         <span
           className="label-mono flex-shrink-0"
           style={{ width: 18, textAlign: 'right', opacity: 0.6 }}
@@ -64,7 +58,10 @@ function BookRankRow({
           {rank}
         </span>
         <div className="flex-1 min-w-0">
-          <div style={{ fontFamily: 'var(--font-roboto-slab)', fontWeight: 700, fontSize: 14 }}>
+          <div
+            className="row-link-title"
+            style={{ fontFamily: 'var(--font-roboto-slab)', fontWeight: 700, fontSize: 14 }}
+          >
             {truncateTitle(stat.title, 34)}
           </div>
           <div className="text-ink-3" style={{ fontSize: 11.5 }}>
@@ -72,8 +69,9 @@ function BookRankRow({
           </div>
         </div>
         <div className="flex-shrink-0 text-right">{metric}</div>
-      </div>
-    </Link>
+        <LinkPending size={13} />
+      </Link>
+    </div>
   )
 }
 
