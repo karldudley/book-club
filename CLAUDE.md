@@ -4,14 +4,16 @@
 A book club web app called **Dogear**. Members join clubs, suggest books, and rate books they've finished. Indie-bookstore aesthetic: parchment palette, Roboto Slab headings, ink stamps, hard drop-shadow cards.
 
 ## Tech stack
-- **Next.js 15** (App Router), **React 19**, **TypeScript**
+- **Next.js 16** (App Router), **React 19**, **TypeScript**
 - **Tailwind CSS 4** — note: uses `@theme inline` with `--color-*` prefix for custom tokens, not the old `tailwind.config.js` `extend.colors` pattern
 - **Supabase** (Postgres + Auth + RLS) — project URL: `https://rnzmkyvpcoiastqsadeo.supabase.co`
 - **next/font/google** — four fonts loaded: Roboto Slab, DM Sans, JetBrains Mono, Caveat
 
 ## Design system
 All shared UI primitives are in `components/ui/dogear.tsx` (no `'use client'` — safe for server components):
-- `DogearLogo`, `Stamp`, `BookCover`, `Avatar`, `SketchDivider`, `StarRating`, `ProgressBar`
+- `DogearLogo`, `Stamp`, `BookCover`, `Avatar`, `SketchDivider`, `StarRating`, `RatingHistogram`, `StatTile`, `Bookshelf`
+
+`RatingHistogram({ ratings: number[], height? })` — ten bars for scores 1-10, empty buckets keep a stub so the axis reads as a full scale. `StatTile({ label, value, sub?, variant? })` — hard-shadow figure tile. `Bookshelf({ books: ShelfBook[], height? })` — spine view; spine colours come from the shared `coverPalette(title)` helper that `BookCover` also uses.
 
 CSS utility classes are in `app/globals.css`. Key ones:
 - `.card` — ink border + 4px 4px 0 drop shadow
@@ -40,6 +42,8 @@ Passwordless magic link via Supabase `signInWithOtp`. No passwords — login and
 - Sign out (`scope: 'local'` default) logs out current device only
 
 ## Routes
+URLs are below; **files live under route groups** — `app/(dashboard)/clubs/[id]/page.tsx`, not `app/clubs/[id]/page.tsx`. `(dashboard)` supplies the Navbar and `max-w-7xl` container; `(auth)` is a narrow centred shell.
+
 ```
 /login                        Auth (magic link)
 /signup                       Auth (magic link — same flow, different headline)
@@ -48,20 +52,42 @@ Passwordless magic link via Supabase `signInWithOtp`. No passwords — login and
 /clubs                        List of user's clubs
 /clubs/new                    Create a club
 /clubs/[id]                   Club detail (now reading, suggestions, past reads, members, activity)
+/clubs/[id]/books/[bookId]    Book detail — blurb, length, per-member verdicts, histogram, history
+/clubs/[id]/stats             League table — rankings, club totals, member awards
 /clubs/[id]/settings          Club settings — admin only (edit name/description/cadence, reset data)
 /clubs/[id]/search            Search Google Books + suggest a book
 /join                         Join a club via 6-char invite code
 ```
 
+Auth is enforced by `proxy.ts` (Next 16's renamed middleware — **not** `middleware.ts`). Its matcher already covers `/clubs*` and `/join*`, so new routes under those prefixes are protected automatically; anything outside them needs the matcher extended.
+
+New server pages should type params as `{ params: Promise<{ id: string }> }` and `await params`. Some older pages use `await Promise.resolve(params)` against a sync type — that's a legacy workaround, don't copy it.
+
 ## Database schema
+
+### Keeping `types/database.ts` honest
+`types/database.ts` is **hand-written, not generated** (`supabase gen types` has never been run here — note the empty `Relationships` and missing `Functions`). It therefore drifts from the real schema, and has twice declared columns that don't exist. Don't trust it as a description of the database.
+
+There are no migration files either — schema changes are applied by hand in the Supabase dashboard, so a column can be added in one place and not the other.
+
+To check a declared column actually exists, without a service_role key (PostgREST validates column names before RLS, so an invalid name 400s even with no rows readable):
+
+```bash
+curl -s -o /dev/null -w "%{http_code}" \
+  "$NEXT_PUBLIC_SUPABASE_URL/rest/v1/<table>?select=<column>&limit=0" \
+  -H "apikey: $NEXT_PUBLIC_SUPABASE_ANON_KEY"
+# 200 = exists, 400 = does not
+```
 
 ### Tables
 - **profiles** — `id, email, display_name, avatar_url, created_at`
 - **clubs** — `id, name, description, admin_id, invite_code, rotation_rule, schedule_weeks, created_at`
 - **club_members** — `id, club_id, user_id, joined_at, turn_order`
-- **club_books** — `id, club_id, google_books_id, title, author, cover_url, page_count, picked_by, status ('suggested'|'active'|'completed'), is_secret, start_date, deadline, created_at`
-- **book_ratings** — `id, book_id (→ club_books.id), user_id, rating (1-10), updated_at`
-- **user_book_progress** — `id, club_book_id, user_id, status ('not_started'|'reading'|'completed'), started_at, completed_at, rating`
+- **club_books** — `id, club_id, google_books_id, title, author, cover_url, page_count, picked_by, status ('suggested'|'active'|'completed'), is_secret, start_date, deadline, completed_at, description, categories (text[]), published_date (text), created_at`
+  - `description` / `categories` / `published_date` come from Google Books and are saved at suggest time. Rows created before that existed have NULLs, so the book page falls back to `getVolume()`. `published_date` is `text` not `date` because Google returns `"2003"`, `"2003-05"` and `"2003-05-12"` interchangeably.
+  - `completed_at` is set by `BookActions.tsx` on "Mark Complete" and drives past-reads ordering. Pre-existing rows were backfilled from `coalesce(deadline, created_at)`, so their order reflects deadline, not a true finish date.
+- **book_ratings** — `book_id (→ club_books.id), user_id, rating (1-10), updated_at`. **The single source of truth for ratings.** No surrogate `id` — it's keyed on `(book_id, user_id)`, which is why `RatingButton` upserts with `onConflict: 'book_id,user_id'`.
+- **user_book_progress** — `id, club_book_id, user_id, status ('not_started'|'reading'|'completed'), started_at, completed_at`
 - **club_events** — `id, club_id, actor_id, event_type, book_id, payload (jsonb), created_at`
 
 ### Admin model
@@ -187,9 +213,20 @@ Shown on the active book card via `components/clubs/ReadingProgress.tsx` (client
 - **`lib/utils/readingTime.ts`** — `formatReadingTime(pages)` returns `{ read, listen }` formatted strings (e.g. `"5h 20m"`). 1 page ≈ 1 min reading (250 wpm), 1.75 min listening (155 wpm). Used on the club detail page and the search confirmation card.
 - **`lib/utils/inviteCode.ts`** — generates the 6-char alphanumeric invite codes.
 - **`lib/utils/queryParser.ts`** — optimises raw search strings before sending to Google Books.
+- **`lib/utils/truncateTitle.ts`** — `truncateTitle(title, limit = 40)` with an ellipsis.
+- **`lib/utils/stripHtml.ts`** — `stripHtml(text)`. Google Books descriptions are HTML fragments (`<p>`, `<br>`, `<b>`, plus named and numeric entities). It is third-party content, so it is flattened to plain text and **never** passed to `dangerouslySetInnerHTML`.
+- **`lib/utils/clubStats.ts`** — all league-table maths, computed in JS (clubs are tiny; no SQL aggregates). Key definitions:
+  - `MIN_RATINGS = 2` — a book needs two ratings to be ranked, so a lone 10/10 can't top the table. One-rating books surface separately via `singleVerdictBooks()`.
+  - `MIN_RATED = 3` — books a member must have rated to qualify for average-based awards.
+  - Divisiveness uses **population** standard deviation (÷n, not n−1) — the sample version inflates 2-5 rater groups.
+  - `contrarianScore` is **leave-one-out**: a member's gap from everyone *else's* average. Including themselves makes all members identical when only two rated.
+  - Every function returns `null`/`[]` rather than dividing by zero — a brand-new club must not render `NaN`.
 
 ## External APIs
-- **Google Books API** — key in `.env.local` as `GOOGLE_BOOKS_API_KEY`. Without a key it hits quota almost immediately. Route: `app/api/books/search/route.ts` → `lib/api/googleBooks.ts`. The `pageCount` field from `volumeInfo` is saved to `club_books.page_count` on suggestion.
+- **Google Books API** — key in `.env.local` as `GOOGLE_BOOKS_API_KEY`. Without a key it hits quota almost immediately. Route: `app/api/books/search/route.ts` → `lib/api/googleBooks.ts`.
+  - `searchBooks(query)` — multi-strategy search with relevance ranking; `cache: 'no-store'`.
+  - `getVolume(volumeId)` — single volume by id, used by the book page to backfill a missing description. Cached 24h (`next: { revalidate: 86400 }`) since volume metadata is static; returns `null` rather than throwing on 404, so a stale id degrades to "no description".
+  - Saved to `club_books` on suggestion: `pageCount`, `description` (stripped), `categories`, `publishedDate`, title/authors/thumbnail.
 
 ## Admin RPC functions
 
@@ -247,7 +284,17 @@ No formal semver — deploy straight from `main`. The `package.json` version (`0
 ## Commit messages
 Keep messages short (max 20 words). Do not mention Claude, Claude Code, or any AI agent in commit messages.
 
+## Book detail page
+`/clubs/[id]/books/[bookId]` — reached from past reads, the active book title/cover, and non-secret suggestion rows on the club page. **Mystery cards are deliberately not linked**, so the detail route can't be used as a peephole.
+
+Two layers guard it: the `cb_select` RLS policy (a guessed URL for someone else's secret suggestion returns no row → `notFound()`), plus an explicit `book.club_id !== id` check so a valid book id from another club can't render under this club's header. Keep both if you touch this page.
+
+## League table
+`/clubs/[id]/stats` — linked from the club header for **all** members, not just admins. Rankings, club totals, a `Bookshelf` of finished reads, member awards, and a full member table. All maths lives in `lib/utils/clubStats.ts` (see Utilities).
+
 ## What's intentionally not implemented
 The DB schema doesn't support these features so they were skipped in the UI:
 - Upvote counts on suggestions (no votes table)
 - Discover / My Shelf pages (no routes exist)
+
+Deferred but cheap once wanted: written mini-reviews (`review` column on `book_ratings`), per-member pages with taste-match scores, and reading-progress history on finished books (the club page only queries `user_book_progress` for *active* books, so a finished book's progress rows are never read).

@@ -210,25 +210,6 @@ body {
   margin-bottom: 6px;
 }
 
-/* ===== Progress bar (ruler look) ===== */
-.ruler-track {
-  height: 12px;
-  background:
-    repeating-linear-gradient(90deg, rgba(47,42,36,0.15) 0 1px, transparent 1px 12px),
-    var(--paper-2);
-  border: 1.5px solid var(--ink-3);
-  border-radius: 999px;
-  position: relative;
-  overflow: hidden;
-}
-.ruler-fill {
-  position: absolute;
-  top: 0; left: 0; bottom: 0;
-  background: var(--terracotta);
-  border-right: 1.5px solid var(--ink);
-  transition: width 400ms ease;
-}
-
 /* ===== Typography utilities ===== */
 .h-display {
   font-family: var(--font-roboto-slab), Georgia, serif;

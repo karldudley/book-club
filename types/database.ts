@@ -145,6 +145,10 @@ export interface Database {
           is_secret?: boolean
           start_date?: string | null
           deadline?: string | null
+          completed_at?: string | null
+          description?: string | null
+          categories?: string[] | null
+          published_date?: string | null
           created_at?: string
         }
         Relationships: []
@@ -181,21 +185,18 @@ export interface Database {
       }
       book_ratings: {
         Row: {
-          id: string
           book_id: string
           user_id: string
           rating: number
           updated_at: string
         }
         Insert: {
-          id?: string
           book_id: string
           user_id: string
           rating: number
           updated_at?: string
         }
         Update: {
-          id?: string
           book_id?: string
           user_id?: string
           rating?: number
@@ -211,7 +212,6 @@ export interface Database {
           status: 'not_started' | 'reading' | 'completed'
           started_at: string | null
           completed_at: string | null
-          rating: number | null
         }
         Insert: {
           id?: string
@@ -220,7 +220,6 @@ export interface Database {
           status?: 'not_started' | 'reading' | 'completed'
           started_at?: string | null
           completed_at?: string | null
-          rating?: number | null
         }
         Update: {
           id?: string
@@ -229,7 +228,6 @@ export interface Database {
           status?: 'not_started' | 'reading' | 'completed'
           started_at?: string | null
           completed_at?: string | null
-          rating?: number | null
         }
         Relationships: []
       }

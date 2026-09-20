@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { DogearLogo, SketchDivider } from '@/components/ui/dogear'
+import { DogearLogo } from '@/components/ui/dogear'
 
 type AuthFormProps = {
   mode: 'login' | 'signup'

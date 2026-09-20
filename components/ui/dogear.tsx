@@ -243,34 +243,6 @@ export function StarRating({
   )
 }
 
-/* ---- ProgressBar ---- */
-export function ProgressBar({
-  value,
-  max = 100,
-  label,
-  sub,
-}: {
-  value: number
-  max?: number
-  label?: string
-  sub?: string
-}) {
-  const pct = Math.max(0, Math.min(100, Math.round((value / max) * 100)))
-  return (
-    <div>
-      {(label || sub) && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-          {label && <span className="label-mono">{label}</span>}
-          {sub && <span className="label-mono" style={{ color: 'var(--ink)' }}>{sub}</span>}
-        </div>
-      )}
-      <div className="ruler-track">
-        <div className="ruler-fill" style={{ width: `${pct}%` }} />
-      </div>
-    </div>
-  )
-}
-
 /* ---- RatingHistogram ---- */
 export function RatingHistogram({
   ratings,
