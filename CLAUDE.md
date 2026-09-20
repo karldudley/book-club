@@ -230,6 +230,7 @@ Shown on the active book card via `components/clubs/ReadingProgress.tsx` (client
   - `searchBooks(query)` — multi-strategy search with relevance ranking; `cache: 'no-store'`.
   - `getVolume(volumeId)` — single volume by id, used by the book page to backfill a missing description. Cached 24h (`next: { revalidate: 86400 }`) since volume metadata is static; returns `null` rather than throwing on 404, so a stale id degrades to "no description".
   - Saved to `club_books` on suggestion: `pageCount`, `description` (stripped), `categories`, `publishedDate`, title/authors/thumbnail.
+  - **The two endpoints return different description formats.** `/volumes/{id}` (getVolume) returns the full description **with HTML** (`<b>`, `<br>`); `/volumes?q=` (search) returns a shorter **plain-text** snippet for the same volume. Everything is run through `stripHtml` regardless, so the format can change without breaking the UI.
 
 ## Admin RPC functions
 
@@ -293,6 +294,8 @@ Keep messages short (max 20 words). Do not mention Claude, Claude Code, or any A
 Two layers guard it: the `cb_select` RLS policy (a guessed URL for someone else's secret suggestion returns no row → `notFound()`), plus an explicit `book.club_id !== id` check so a valid book id from another club can't render under this club's header. Keep both if you touch this page.
 
 ## Navigation feedback
+**Always use `next/link`, never a bare `<a href="/...">`** for internal routes. Plain anchors trigger a full page reload (white flash, lost client state, re-running every server query). The Navbar, `DogearLogo` and `AuthForm` all used to do this and were converted; the `@next/next/no-html-link-for-pages` lint rule catches regressions.
+
 `components/ui/LinkPending.tsx` (`'use client'`) uses Next 16's `useLinkStatus()` from `next/link`, which reads the pending state of the **nearest enclosing `<Link>`** — so it must be rendered as a child of one, and the surrounding page can stay a server component. It shows a chevron at rest and a spinner while navigating, in the same box so rows don't reflow.
 
 Both `/clubs/[id]/books/[bookId]` and `/clubs/[id]/stats` have a `loading.tsx` skeleton. The book page's matters most: it may call `getVolume()` to backfill a missing description, so it can be on screen for a moment.

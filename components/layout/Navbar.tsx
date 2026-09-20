@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { DogearLogo } from '@/components/ui/dogear'
 
 export default function Navbar() {
@@ -27,10 +28,10 @@ export default function Navbar() {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-1">
-          <a href="/clubs" className="nav-link eyebrow">My Clubs</a>
-          <a href="/join" className="nav-link eyebrow">Join Club</a>
+          <Link href="/clubs" className="nav-link eyebrow">My Clubs</Link>
+          <Link href="/join" className="nav-link eyebrow">Join Club</Link>
           <div className="w-px h-5 mx-1.5 bg-ink-3 opacity-50" />
-          <a href="/settings" className="nav-link eyebrow">Settings</a>
+          <Link href="/settings" className="nav-link eyebrow">Settings</Link>
           <button onClick={handleSignOut} className="btn btn-ghost btn-sm">
             Sign Out
           </button>
@@ -62,9 +63,9 @@ export default function Navbar() {
       {/* Mobile dropdown */}
       {menuOpen && (
         <div className="md:hidden card absolute left-4 right-4 z-50 p-2 flex flex-col gap-1" style={{ top: 'calc(100% + 8px)' }}>
-          <a href="/clubs" className="nav-link eyebrow block">My Clubs</a>
-          <a href="/join" className="nav-link eyebrow block">Join Club</a>
-          <a href="/settings" className="nav-link eyebrow block">Settings</a>
+          <Link href="/clubs" className="nav-link eyebrow block">My Clubs</Link>
+          <Link href="/join" className="nav-link eyebrow block">Join Club</Link>
+          <Link href="/settings" className="nav-link eyebrow block">Settings</Link>
           <div className="h-px bg-ink-3 opacity-30 my-1" />
           <button onClick={handleSignOut} className="btn btn-ghost btn-sm w-full justify-start">
             Sign Out

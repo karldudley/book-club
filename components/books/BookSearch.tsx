@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { GoogleBook } from '@/lib/api/googleBooks'
 import { BookCover, Stamp } from '@/components/ui/dogear'
 import { truncateTitle } from '@/lib/utils/truncateTitle'
+import { stripHtml } from '@/lib/utils/stripHtml'
 
 interface BookSearchProps {
   onSelectBook: (book: GoogleBook) => void
@@ -75,6 +76,7 @@ export default function BookSearch({ onSelectBook, selectedBookId }: BookSearchP
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by title, author, or ISBN…"
+            aria-label="Search for a book by title, author, or ISBN"
             className="field"
             style={{ flex: 1, border: 'none', boxShadow: 'none', background: 'transparent', transform: 'none', fontSize: 16, padding: '10px 4px' }}
           />
@@ -134,6 +136,10 @@ export default function BookSearch({ onSelectBook, selectedBookId }: BookSearchP
                 <div
                   key={book.id}
                   className="card lift"
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={isSelected}
+                  aria-label={`Suggest ${book.volumeInfo.title}`}
                   style={{
                     padding: 18,
                     background: isSelected ? 'var(--paper-2)' : 'var(--paper)',
@@ -142,6 +148,13 @@ export default function BookSearch({ onSelectBook, selectedBookId }: BookSearchP
                     cursor: 'pointer',
                   }}
                   onClick={() => onSelectBook(book)}
+                  onKeyDown={(e) => {
+                    // The card is a div, so Enter/Space need wiring up by hand.
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      onSelectBook(book)
+                    }
+                  }}
                 >
                   {isSelected && (
                     <div style={{ position: 'absolute', top: 10, right: 10 }}>
@@ -202,7 +215,7 @@ export default function BookSearch({ onSelectBook, selectedBookId }: BookSearchP
                         overflow: 'hidden',
                       }}
                     >
-                      "{book.volumeInfo.description}"
+                      &ldquo;{stripHtml(book.volumeInfo.description)}&rdquo;
                     </p>
                   )}
 

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { BookCover, SketchDivider } from '@/components/ui/dogear'
+import LinkPending from '@/components/ui/LinkPending'
 
 export default async function ClubsPage() {
   const supabase = await createClient()
@@ -116,7 +117,10 @@ export default async function ClubsPage() {
               <div className="flex flex-col items-center gap-4 w-full">
                 <BookCover title={club.name} url={activeCoverByClub[club.id] ?? lastCompletedCoverByClub[club.id]} size="lg" />
                 <div className="w-full">
-                  <h3 className="h-section text-lg m-0 leading-snug">{club.name}</h3>
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="h-section text-lg m-0 leading-snug">{club.name}</h3>
+                    <LinkPending size={15} />
+                  </div>
                   {club.description && (
                     <p className="text-[13px] text-ink-2 mt-1.5 leading-relaxed line-clamp-2">
                       {club.description}

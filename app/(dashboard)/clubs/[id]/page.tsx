@@ -211,7 +211,7 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
               activeBooks.map((book: any) => (
                 <div key={book.id}>
                   <div className="flex gap-4 sm:gap-6 items-start">
-                    <Link href={`/clubs/${id}/books/${book.id}`} style={{ display: 'block', flexShrink: 0 }}>
+                    <Link href={`/clubs/${id}/books/${book.id}`} className="cover-link">
                       <BookCover url={book.cover_url} title={book.title} author={book.author} size="lg" />
                     </Link>
                     <div className="flex-1 min-w-0">

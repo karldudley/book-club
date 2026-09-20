@@ -1,9 +1,10 @@
 import React from 'react'
+import Link from 'next/link'
 
 /* ---- DogearLogo ---- */
 export function DogearLogo({ className }: { className?: string }) {
   return (
-    <a
+    <Link
       href="/clubs"
       className={`inline-flex items-center gap-2.5 no-underline${className ? ' ' + className : ''}`}
       style={{ textDecoration: 'none' }}
@@ -27,7 +28,7 @@ export function DogearLogo({ className }: { className?: string }) {
       >
         <span style={{ color: 'var(--ink)' }}>Dog</span><span style={{ color: 'var(--terracotta)' }}>ear</span>
       </span>
-    </a>
+    </Link>
   )
 }
 

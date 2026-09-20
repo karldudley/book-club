@@ -250,6 +250,23 @@ body {
   text-underline-offset: 3px;
 }
 
+/* A cover image that navigates. */
+.cover-link {
+  display: block;
+  flex-shrink: 0;
+  border-radius: 3px;
+  transition: transform 120ms ease;
+}
+.cover-link:hover,
+.cover-link:focus-visible {
+  transform: translate(-2px, -2px);
+  outline: none;
+}
+.cover-link:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
 /* Chevron / spinner slot — same box either way so the row never reflows. */
 .link-pending {
   display: inline-flex;

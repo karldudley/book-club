@@ -178,7 +178,7 @@ export default function SearchPage({ params }: { params: Promise<{ id: string }>
                     display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
                   }}
                 >
-                  {selectedBook.volumeInfo.description}
+                  {stripHtml(selectedBook.volumeInfo.description)}
                 </p>
               )}
 

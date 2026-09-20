@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import Link from 'next/link'
 import { DogearLogo } from '@/components/ui/dogear'
 
 type AuthFormProps = {
@@ -98,6 +99,7 @@ export default function AuthForm({ mode, initialError }: AuthFormProps) {
             <input
               id="displayName"
               type="text"
+              autoComplete="name"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               className="field"
@@ -112,6 +114,8 @@ export default function AuthForm({ mode, initialError }: AuthFormProps) {
             <input
               id="email"
               type="email"
+              autoComplete="email"
+              inputMode="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -155,16 +159,16 @@ export default function AuthForm({ mode, initialError }: AuthFormProps) {
         {mode === 'login' ? (
           <>
             New to Dogear?{' '}
-            <a href="/signup" style={{ color: 'var(--brown)', fontWeight: 600, textDecoration: 'underline' }}>
+            <Link href="/signup" style={{ color: 'var(--brown)', fontWeight: 600, textDecoration: 'underline' }}>
               Start a shelf →
-            </a>
+            </Link>
           </>
         ) : (
           <>
             Already have one?{' '}
-            <a href="/login" style={{ color: 'var(--brown)', fontWeight: 600, textDecoration: 'underline' }}>
+            <Link href="/login" style={{ color: 'var(--brown)', fontWeight: 600, textDecoration: 'underline' }}>
               Sign in →
-            </a>
+            </Link>
           </>
         )}
       </div>
