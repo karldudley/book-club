@@ -107,6 +107,10 @@ export interface Database {
           is_secret: boolean
           start_date: string | null
           deadline: string | null
+          completed_at: string | null
+          description: string | null
+          categories: string[] | null
+          published_date: string | null
           created_at: string
         }
         Insert: {
@@ -122,6 +126,10 @@ export interface Database {
           is_secret?: boolean
           start_date?: string | null
           deadline?: string | null
+          completed_at?: string | null
+          description?: string | null
+          categories?: string[] | null
+          published_date?: string | null
           created_at?: string
         }
         Update: {

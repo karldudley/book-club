@@ -107,7 +107,11 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
 
   const isAdmin = club.admin_id === user.id
   const activeBooks = bookRatings?.filter((b: any) => b.status === 'active') || []
-  const completedBooks = bookRatings?.filter((b: any) => b.status === 'completed') || []
+  const completedBooks = (bookRatings?.filter((b: any) => b.status === 'completed') || []).sort(
+    (a: any, b: any) =>
+      new Date(b.completed_at || b.created_at).getTime() -
+      new Date(a.completed_at || a.created_at).getTime()
+  )
   const suggestedBooks = bookRatings?.filter((b: any) => b.status === 'suggested') || []
   const userSuggestion = suggestedBooks.find((b: any) => b.picked_by === user.id)
 
@@ -162,14 +166,17 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
               </div>
             </div>
           </div>
-          {isAdmin && (
-            <div className="flex flex-col items-end gap-2">
-              <Stamp variant="brown" rotate={3}>You are admin</Stamp>
+          <div className="flex flex-col items-end gap-2">
+            {isAdmin && <Stamp variant="brown" rotate={3}>You are admin</Stamp>}
+            <Link href={`/clubs/${id}/stats`} className="btn btn-paper btn-sm">
+              📊 League table
+            </Link>
+            {isAdmin && (
               <Link href={`/clubs/${id}/settings`} className="btn btn-ghost btn-sm">
                 Settings →
               </Link>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
@@ -203,9 +210,17 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
               activeBooks.map((book: any) => (
                 <div key={book.id}>
                   <div className="flex gap-4 sm:gap-6 items-start">
-                    <BookCover url={book.cover_url} title={book.title} author={book.author} size="lg" />
+                    <Link href={`/clubs/${id}/books/${book.id}`} style={{ display: 'block', flexShrink: 0 }}>
+                      <BookCover url={book.cover_url} title={book.title} author={book.author} size="lg" />
+                    </Link>
                     <div className="flex-1 min-w-0">
-                      <h2 className="h-display text-2xl sm:text-3xl m-0 leading-tight">{truncateTitle(book.title)}</h2>
+                      <Link
+                        href={`/clubs/${id}/books/${book.id}`}
+                        className="no-underline"
+                        style={{ color: 'inherit' }}
+                      >
+                        <h2 className="h-display text-2xl sm:text-3xl m-0 leading-tight">{truncateTitle(book.title)}</h2>
+                      </Link>
                       {book.author && (
                         <p className="text-ink-2 mt-1" style={{ fontFamily: 'var(--font-roboto-slab)', fontStyle: 'italic', fontSize: 16 }}>
                           by {book.author}
@@ -320,9 +335,22 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                         <BookCover url={book.cover_url} title={book.title} size="sm" />
                       )}
                       <div className="flex-1 min-w-0">
-                        <div style={{ fontFamily: 'var(--font-roboto-slab)', fontWeight: 700, fontSize: 16 }}>
-                          {isMystery ? 'Secret suggestion' : truncateTitle(book.title)}
-                        </div>
+                        {/* Mystery cards stay inert — the detail page must not become a peephole. */}
+                        {isMystery ? (
+                          <div style={{ fontFamily: 'var(--font-roboto-slab)', fontWeight: 700, fontSize: 16 }}>
+                            Secret suggestion
+                          </div>
+                        ) : (
+                          <Link
+                            href={`/clubs/${id}/books/${book.id}`}
+                            className="no-underline"
+                            style={{ color: 'inherit' }}
+                          >
+                            <div style={{ fontFamily: 'var(--font-roboto-slab)', fontWeight: 700, fontSize: 16 }}>
+                              {truncateTitle(book.title)}
+                            </div>
+                          </Link>
+                        )}
                         {!isMystery && book.author && (
                           <div className="text-ink-2" style={{ fontSize: 13 }}>{book.author}</div>
                         )}
@@ -400,15 +428,21 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
                       borderBottom: i < completedBooks.length - 1 ? '1px dashed var(--ink-3)' : 'none',
                     }}
                   >
-                    <BookCover url={book.cover_url} title={book.title} size="sm" />
-                    <div>
+                    <Link href={`/clubs/${id}/books/${book.id}`} style={{ display: 'block' }}>
+                      <BookCover url={book.cover_url} title={book.title} size="sm" />
+                    </Link>
+                    <Link
+                      href={`/clubs/${id}/books/${book.id}`}
+                      className="no-underline"
+                      style={{ color: 'inherit' }}
+                    >
                       <div style={{ fontFamily: 'var(--font-roboto-slab)', fontWeight: 700, fontSize: 15 }}>{truncateTitle(book.title)}</div>
                       {book.author && <div className="text-ink-2" style={{ fontSize: 12 }}>{book.author}</div>}
                       {book.page_count > 0 && (() => {
                         const { read } = formatReadingTime(book.page_count)
                         return <p className="label-mono mt-0.5" style={{ fontSize: 9 }}>⏱ {read}</p>
                       })()}
-                    </div>
+                    </Link>
                     <div className="flex flex-col items-end gap-1.5">
                       <RatingButton bookId={book.id} clubId={id} bookTitle={book.title} currentUserRating={book.currentUserRating} averageRating={book.averageRating} totalRatings={book.totalRatings} />
                     </div>

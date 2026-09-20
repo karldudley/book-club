@@ -15,6 +15,7 @@ export interface GoogleBook {
     averageRating?: number
     ratingsCount?: number
     printType?: string
+    categories?: string[]
   }
 }
 
@@ -94,6 +95,41 @@ async function fetchVolumes(query: string): Promise<GoogleBook[]> {
     if (response.status < 500 || attempt >= RETRY_DELAYS_MS.length) {
       throw new Error(`API error ${response.status}`)
     }
+
+    await sleep(RETRY_DELAYS_MS[attempt])
+  }
+}
+
+/**
+ * Fetch one volume by id, for books suggested before we started persisting
+ * description/categories/publishedDate. Volume metadata is static, so unlike
+ * search this is cached for a day rather than `no-store` — the book page would
+ * otherwise hit Google on every render.
+ *
+ * A missing volume returns null rather than throwing: a stale google_books_id
+ * should degrade to "no description", not break the page.
+ */
+export async function getVolume(volumeId: string): Promise<GoogleBook | null> {
+  if (!volumeId) return null
+
+  const apiKey = process.env.GOOGLE_BOOKS_API_KEY || ''
+  const url = `https://www.googleapis.com/books/v1/volumes/${encodeURIComponent(
+    volumeId
+  )}${apiKey ? `?key=${apiKey}` : ''}`
+
+  for (let attempt = 0; ; attempt++) {
+    let response: Response
+    try {
+      response = await fetch(url, { next: { revalidate: 86400 } })
+    } catch {
+      if (attempt >= RETRY_DELAYS_MS.length) return null
+      await sleep(RETRY_DELAYS_MS[attempt])
+      continue
+    }
+
+    if (response.ok) return (await response.json()) as GoogleBook
+
+    if (response.status < 500 || attempt >= RETRY_DELAYS_MS.length) return null
 
     await sleep(RETRY_DELAYS_MS[attempt])
   }

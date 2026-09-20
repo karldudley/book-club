@@ -47,7 +47,7 @@ export default function BookActions({ bookId, bookTitle, bookStatus, isAdmin, cl
 
       const { error } = await (supabase
         .from('club_books') as any)
-        .update({ status: 'completed' })
+        .update({ status: 'completed', completed_at: new Date().toISOString() })
         .eq('id', bookId)
 
       if (error) throw error

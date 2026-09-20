@@ -70,6 +70,13 @@ const sizeMap = {
   lg: { w: 112, h: 168 },
 }
 
+/** Deterministic [background, foreground] pair from a title. */
+function coverPalette(title: string): [string, string] {
+  let hash = 0
+  for (let i = 0; i < title.length; i++) hash = (hash * 31 + title.charCodeAt(i)) | 0
+  return COVER_COLORS[Math.abs(hash) % COVER_COLORS.length]
+}
+
 export function BookCover({
   url,
   title,
@@ -95,9 +102,7 @@ export function BookCover({
   }
 
   // Deterministic color from title
-  let hash = 0
-  for (let i = 0; i < title.length; i++) hash = (hash * 31 + title.charCodeAt(i)) | 0
-  const [bg, fg] = COVER_COLORS[Math.abs(hash) % COVER_COLORS.length]
+  const [bg, fg] = coverPalette(title)
   const initials = title
     .split(' ')
     .slice(0, 2)
@@ -262,6 +267,220 @@ export function ProgressBar({
       <div className="ruler-track">
         <div className="ruler-fill" style={{ width: `${pct}%` }} />
       </div>
+    </div>
+  )
+}
+
+/* ---- RatingHistogram ---- */
+export function RatingHistogram({
+  ratings,
+  height = 64,
+}: {
+  ratings: number[]
+  height?: number
+}) {
+  if (!ratings || ratings.length === 0) return null
+
+  const buckets = Array.from({ length: 10 }, (_, i) =>
+    ratings.filter((r) => Math.round(r) === i + 1).length
+  )
+  const peak = Math.max(...buckets)
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height }}>
+        {buckets.map((count, i) => (
+          <div
+            key={i}
+            title={`${count} ${count === 1 ? 'rating' : 'ratings'} of ${i + 1}/10`}
+            style={{
+              flex: 1,
+              // Empty buckets keep a stub so the axis reads as a full 1-10 scale.
+              height: count === 0 ? 2 : Math.max(4, (count / peak) * height),
+              background: count === 0 ? 'var(--ink-3)' : 'var(--mustard)',
+              border: count === 0 ? 'none' : '1.5px solid var(--ink)',
+              borderRadius: 3,
+              transition: 'height 300ms ease',
+            }}
+          />
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 4, marginTop: 5 }}>
+        {buckets.map((_, i) => (
+          <span
+            key={i}
+            className="label-mono"
+            style={{ flex: 1, textAlign: 'center', fontSize: 9 }}
+          >
+            {i + 1}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ---- StatTile ---- */
+export function StatTile({
+  label,
+  value,
+  sub,
+  variant = 'paper',
+}: {
+  label: string
+  value: string | number
+  sub?: string
+  variant?: 'paper' | 'kraft' | 'ink'
+}) {
+  const palette = {
+    paper: { bg: 'var(--paper)', fg: 'var(--ink)' },
+    kraft: { bg: 'var(--paper-2)', fg: 'var(--ink)' },
+    ink: { bg: 'var(--ink)', fg: 'var(--paper)' },
+  }[variant]
+
+  return (
+    <div
+      style={{
+        background: palette.bg,
+        color: palette.fg,
+        border: '1.5px solid var(--ink)',
+        borderRadius: 'var(--r-md)',
+        boxShadow: '3px 3px 0 var(--ink)',
+        padding: '14px 16px',
+      }}
+    >
+      <p
+        className="label-mono"
+        style={{ marginBottom: 6, color: variant === 'ink' ? 'var(--paper-3)' : undefined }}
+      >
+        {label}
+      </p>
+      <div
+        style={{
+          fontFamily: 'var(--font-roboto-slab)',
+          fontWeight: 800,
+          fontSize: 26,
+          lineHeight: 1.05,
+        }}
+      >
+        {value}
+      </div>
+      {sub && (
+        <p
+          className="eyebrow"
+          style={{ marginTop: 5, color: variant === 'ink' ? 'var(--paper-3)' : undefined }}
+        >
+          {sub}
+        </p>
+      )}
+    </div>
+  )
+}
+
+/* ---- Bookshelf ---- */
+export interface ShelfBook {
+  id: string
+  title: string
+  author?: string | null
+  coverUrl?: string | null
+  rating?: number | null
+  href?: string
+}
+
+export function Bookshelf({ books, height = 150 }: { books: ShelfBook[]; height?: number }) {
+  if (!books || books.length === 0) return null
+
+  return (
+    <div>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-end',
+          gap: 5,
+          overflowX: 'auto',
+          paddingBottom: 4,
+        }}
+      >
+        {books.map((book) => {
+          const [bg, fg] = coverPalette(book.title)
+          // Vary spine width slightly by title length, like real books.
+          const width = 26 + (book.title.length % 5) * 4
+          const spine = (
+            <div
+              title={`${book.title}${book.author ? ` — ${book.author}` : ''}`}
+              style={{
+                width,
+                height,
+                flexShrink: 0,
+                background: bg,
+                color: fg,
+                border: '1.5px solid var(--ink)',
+                borderRadius: '2px 2px 0 0',
+                boxShadow: '2px 0 0 rgba(47,42,36,0.18)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '8px 4px',
+                cursor: book.href ? 'pointer' : 'default',
+              }}
+            >
+              <span
+                style={{
+                  writingMode: 'vertical-rl',
+                  textOrientation: 'mixed',
+                  fontFamily: 'var(--font-roboto-slab)',
+                  fontWeight: 700,
+                  fontSize: 11,
+                  letterSpacing: '0.02em',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  maxHeight: height - 34,
+                }}
+              >
+                {book.title}
+              </span>
+              {book.rating ? (
+                <span
+                  style={{
+                    fontFamily: 'var(--font-jetbrains-mono)',
+                    fontSize: 9,
+                    fontWeight: 700,
+                    opacity: 0.85,
+                  }}
+                >
+                  {book.rating.toFixed(1)}
+                </span>
+              ) : null}
+            </div>
+          )
+
+          return book.href ? (
+            <a
+              key={book.id}
+              href={book.href}
+              style={{ textDecoration: 'none', display: 'block', flexShrink: 0 }}
+            >
+              {spine}
+            </a>
+          ) : (
+            <div key={book.id} style={{ flexShrink: 0 }}>
+              {spine}
+            </div>
+          )
+        })}
+      </div>
+      {/* Shelf edge */}
+      <div
+        style={{
+          height: 8,
+          background: 'var(--paper-3)',
+          border: '1.5px solid var(--ink)',
+          borderRadius: '0 0 4px 4px',
+          boxShadow: '4px 4px 0 var(--ink)',
+        }}
+      />
     </div>
   )
 }

@@ -7,6 +7,7 @@ import BookSearch from '@/components/books/BookSearch'
 import { GoogleBook } from '@/lib/api/googleBooks'
 import { formatReadingTime } from '@/lib/utils/readingTime'
 import { truncateTitle } from '@/lib/utils/truncateTitle'
+import { stripHtml } from '@/lib/utils/stripHtml'
 import { createClient } from '@/lib/supabase/client'
 import { use } from 'react'
 import { BookCover, Stamp } from '@/components/ui/dogear'
@@ -59,6 +60,9 @@ export default function SearchPage({ params }: { params: Promise<{ id: string }>
             author: selectedBook.volumeInfo.authors?.join(', ') || null,
             cover_url: selectedBook.volumeInfo.imageLinks?.thumbnail || null,
             page_count: selectedBook.volumeInfo.pageCount ?? null,
+            description: stripHtml(selectedBook.volumeInfo.description) || null,
+            categories: selectedBook.volumeInfo.categories ?? null,
+            published_date: selectedBook.volumeInfo.publishedDate ?? null,
             is_secret: isSecret,
           })
           .eq('id', existingSuggestion.id)
@@ -75,6 +79,9 @@ export default function SearchPage({ params }: { params: Promise<{ id: string }>
             author: selectedBook.volumeInfo.authors?.join(', ') || null,
             cover_url: selectedBook.volumeInfo.imageLinks?.thumbnail || null,
             page_count: selectedBook.volumeInfo.pageCount ?? null,
+            description: stripHtml(selectedBook.volumeInfo.description) || null,
+            categories: selectedBook.volumeInfo.categories ?? null,
+            published_date: selectedBook.volumeInfo.publishedDate ?? null,
             picked_by: user.id,
             status: 'suggested',
             is_secret: isSecret,
