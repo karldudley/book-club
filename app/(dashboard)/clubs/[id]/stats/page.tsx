@@ -15,7 +15,6 @@ import {
   harshestCritic,
   mostGenerous,
   biggestContrarian,
-  topSuggester,
   singleVerdictBooks,
   MIN_RATINGS,
   MIN_RATED,
@@ -140,7 +139,7 @@ export default async function StatsPage({ params }: { params: Promise<{ id: stri
 
   const { data: books } = await supabase
     .from('club_books')
-    .select('id, title, author, cover_url, page_count, picked_by, status, completed_at')
+    .select('id, title, author, cover_url, page_count, status, completed_at')
     .eq('club_id', id) as { data: any[] }
 
   const { data: members } = await supabase
@@ -172,7 +171,7 @@ export default async function StatsPage({ params }: { params: Promise<{ id: stri
 
   const stats = buildBookStats(bookRows, ratingRows)
   const totals = clubTotals(bookRows, ratingRows)
-  const memberStats = buildMemberStats(memberRows, bookRows, ratingRows)
+  const memberStats = buildMemberStats(memberRows, ratingRows)
   const unranked = singleVerdictBooks(bookRows, ratingRows)
 
   const best = highestRated(stats)
@@ -369,11 +368,6 @@ export default async function StatsPage({ params }: { params: Promise<{ id: stri
             member={biggestContrarian(memberStats)}
             detail={m => `${m.contrarianScore.toFixed(1)} points off the rest of the club, on average`}
           />
-          <MemberAward
-            title="Most suggestions"
-            member={topSuggester(memberStats)}
-            detail={m => `${m.suggestedCount} suggested · ${m.activatedCount} made it to the shelf`}
-          />
         </div>
         <p className="label-mono mt-4" style={{ opacity: 0.7 }}>
           Rating awards need {MIN_RATED}+ books rated to qualify.
@@ -391,9 +385,7 @@ export default async function StatsPage({ params }: { params: Promise<{ id: stri
                 <tr style={{ borderBottom: '1.5px solid var(--ink)' }}>
                   <th className="label-mono" style={{ textAlign: 'left', padding: '0 8px 8px 0' }}>Member</th>
                   <th className="label-mono" style={{ textAlign: 'right', padding: '0 8px 8px' }}>Rated</th>
-                  <th className="label-mono" style={{ textAlign: 'right', padding: '0 8px 8px' }}>Avg given</th>
-                  <th className="label-mono" style={{ textAlign: 'right', padding: '0 8px 8px' }}>Suggested</th>
-                  <th className="label-mono" style={{ textAlign: 'right', padding: '0 0 8px 8px' }}>Activated</th>
+                  <th className="label-mono" style={{ textAlign: 'right', padding: '0 0 8px 8px' }}>Avg given</th>
                 </tr>
               </thead>
               <tbody>
@@ -410,14 +402,8 @@ export default async function StatsPage({ params }: { params: Promise<{ id: stri
                       <td style={{ textAlign: 'right', padding: '9px 8px', fontFamily: 'var(--font-jetbrains-mono)' }}>
                         {m.ratedCount}
                       </td>
-                      <td style={{ textAlign: 'right', padding: '9px 8px', fontFamily: 'var(--font-jetbrains-mono)' }}>
-                        {m.averageGiven === null ? '—' : m.averageGiven.toFixed(1)}
-                      </td>
-                      <td style={{ textAlign: 'right', padding: '9px 8px', fontFamily: 'var(--font-jetbrains-mono)' }}>
-                        {m.suggestedCount}
-                      </td>
                       <td style={{ textAlign: 'right', padding: '9px 0 9px 8px', fontFamily: 'var(--font-jetbrains-mono)' }}>
-                        {m.activatedCount}
+                        {m.averageGiven === null ? '—' : m.averageGiven.toFixed(1)}
                       </td>
                     </tr>
                   ))}

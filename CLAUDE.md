@@ -221,6 +221,7 @@ Shown on the active book card via `components/clubs/ReadingProgress.tsx` (client
   - Divisiveness uses **population** standard deviation (÷n, not n−1) — the sample version inflates 2-5 rater groups.
   - `contrarianScore` is **leave-one-out**: a member's gap from everyone *else's* average. Including themselves makes all members identical when only two rated.
   - Every function returns `null`/`[]` rather than dividing by zero — a brand-new club must not render `NaN`.
+  - **No suggestion or activation metrics.** They were deliberately removed: the club predates the app, so the admin backdated books and suggested/activated entries that weren't theirs, making `picked_by` unrepresentative. Picking also rotates by turn, so the counts carried no signal. Don't reintroduce them off the back of `picked_by`.
 
 ## External APIs
 - **Google Books API** — key in `.env.local` as `GOOGLE_BOOKS_API_KEY`. Without a key it hits quota almost immediately. Route: `app/api/books/search/route.ts` → `lib/api/googleBooks.ts`.

@@ -25,7 +25,6 @@ export interface BookRow {
   author?: string | null
   cover_url?: string | null
   page_count?: number | null
-  picked_by?: string | null
   status: 'suggested' | 'active' | 'completed'
 }
 
@@ -123,7 +122,6 @@ export function mostUnanimous(stats: BookStat[], limit = 5): BookStat[] {
 
 export interface ClubTotals {
   booksCompleted: number
-  booksSuggested: number
   pagesRead: number
   ratingsGiven: number
   clubAverage: number | null
@@ -133,7 +131,6 @@ export function clubTotals(books: BookRow[], ratings: RatingRow[]): ClubTotals {
   const completed = books.filter(b => b.status === 'completed')
   return {
     booksCompleted: completed.length,
-    booksSuggested: books.length,
     pagesRead: completed.reduce((sum, b) => sum + (b.page_count ?? 0), 0),
     ratingsGiven: ratings.length,
     clubAverage: mean(ratings.map(r => r.rating)),
@@ -145,8 +142,6 @@ export interface MemberStat {
   name: string
   ratedCount: number
   averageGiven: number | null
-  suggestedCount: number
-  activatedCount: number
   /**
    * Mean absolute gap between this member's score and everyone *else's* average
    * on the same book. Leave-one-out matters: including the member themselves
@@ -159,12 +154,10 @@ export interface MemberStat {
 
 export function buildMemberStats(
   members: MemberRow[],
-  books: BookRow[],
   ratings: RatingRow[]
 ): MemberStat[] {
   return members.map(member => {
     const theirs = ratings.filter(r => r.user_id === member.id)
-    const suggested = books.filter(b => b.picked_by === member.id)
 
     const deviations: number[] = []
     for (const rating of theirs) {
@@ -180,10 +173,6 @@ export function buildMemberStats(
       name: member.name,
       ratedCount: theirs.length,
       averageGiven: mean(theirs.map(r => r.rating)),
-      suggestedCount: suggested.length,
-      activatedCount: suggested.filter(
-        b => b.status === 'active' || b.status === 'completed'
-      ).length,
       contrarianScore: mean(deviations),
       qualified: theirs.length >= MIN_RATED,
     }
@@ -216,8 +205,3 @@ export function biggestContrarian(stats: MemberStat[]): MemberStat | null {
   )
 }
 
-export function topSuggester(stats: MemberStat[]): MemberStat | null {
-  const eligible = stats.filter(s => s.suggestedCount > 0)
-  if (eligible.length === 0) return null
-  return eligible.reduce((top, s) => (s.suggestedCount > top.suggestedCount ? s : top))
-}
