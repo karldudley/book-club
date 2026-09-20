@@ -216,6 +216,7 @@ Shown on the active book card via `components/clubs/ReadingProgress.tsx` (client
 - **`lib/utils/inviteCode.ts`** — generates the 6-char alphanumeric invite codes.
 - **`lib/utils/queryParser.ts`** — optimises raw search strings before sending to Google Books.
 - **`lib/utils/truncateTitle.ts`** — `truncateTitle(title, limit = 40)` with an ellipsis.
+- **`lib/utils/categories.ts`** — `formatCategories(categories, limit = 3)`. Google returns taxonomy *paths*, not tags (`["Fiction / General", "Fiction / Literary", "Fiction / Magical Realism"]`), which renders as chips that all repeat "Fiction /". This splits on the path separator, dedupes case-insensitively, drops meaningless segments (`General`, `Other`, …) and caps the result — so that example becomes `Fiction · Literary · Magical Realism`.
 - **`lib/utils/stripHtml.ts`** — `stripHtml(text)`. Google Books descriptions are HTML fragments (`<p>`, `<br>`, `<b>`, plus named and numeric entities). It is third-party content, so it is flattened to plain text and **never** passed to `dangerouslySetInnerHTML`.
 - **`lib/utils/clubStats.ts`** — all league-table maths, computed in JS (clubs are tiny; no SQL aggregates). Key definitions:
   - `MIN_RATINGS = 2` — a book needs two ratings to be ranked, so a lone 10/10 can't top the table. One-rating books surface separately via `singleVerdictBooks()`.

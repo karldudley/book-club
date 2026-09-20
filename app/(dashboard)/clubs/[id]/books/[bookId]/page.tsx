@@ -7,6 +7,7 @@ import { BookCover, Stamp, Avatar, SketchDivider, StarRating, RatingHistogram } 
 import { formatReadingTime } from '@/lib/utils/readingTime'
 import { getVolume } from '@/lib/api/googleBooks'
 import { stripHtml } from '@/lib/utils/stripHtml'
+import { formatCategories } from '@/lib/utils/categories'
 
 const STATUS_LABEL = {
   suggested: { text: 'Suggested', variant: 'ink' as const },
@@ -115,6 +116,10 @@ export default async function BookPage({
     }
   }
 
+  // Google's taxonomy paths ("Fiction / Magical Realism") flattened to distinct
+  // genre chips, capped so the header doesn't fill with near-duplicates.
+  const genres = formatCategories(categories)
+
   const status = STATUS_LABEL[book.status as keyof typeof STATUS_LABEL] ?? STATUS_LABEL.suggested
   const pickedBy = book.profiles?.display_name || book.profiles?.email || 'someone'
   const memberName = (m: any) => m.profiles?.display_name || m.profiles?.email || '?'
@@ -154,9 +159,9 @@ export default async function BookPage({
               </p>
             )}
 
-            {categories.length > 0 && (
+            {genres.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-3">
-                {categories.slice(0, 4).map((c: string) => (
+                {genres.map((c: string) => (
                   <span
                     key={c}
                     className="label-mono"
